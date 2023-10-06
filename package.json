@@ -1,0 +1,28 @@
+{
+  "name": "@progedu/assert-codeblock",
+  "version": "1.0.0",
+  "description": "コードブロックが「file.xx の全体」「file.xx の一部」「file.xx と file.yy の diff」と一致しているかどうかを自動で検査するツール",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "prepare": "npm run build",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/progedu/assert-codeblock.git"
+  },
+  "author": "hsjoihs",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/progedu/assert-codeblock/issues"
+  },
+  "homepage": "https://github.com/progedu/assert-codeblock#readme",
+  "dependencies": {
+    "@types/diff": "^5.0.5",
+    "@types/node": "^20.8.2",
+    "diff": "^5.1.0",
+    "typescript": "^5.2.2"
+  }
+}
