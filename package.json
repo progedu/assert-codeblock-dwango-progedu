@@ -1,5 +1,5 @@
 {
-  "name": "@progedu/assert-codeblock",
+  "name": "assert-codeblock-dwango-progedu",
   "version": "1.0.0",
   "description": "コードブロックが「file.xx の全体」「file.xx の一部」「file.xx と file.yy の diff」と一致しているかどうかを自動で検査するツール",
   "main": "dist/index.js",
@@ -11,14 +11,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/progedu/assert-codeblock.git"
+    "url": "git+https://github.com/progedu/assert-codeblock-dwango-progedu.git"
   },
   "author": "hsjoihs",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/progedu/assert-codeblock/issues"
+    "url": "https://github.com/progedu/assert-codeblock-dwango-progedu/issues"
   },
-  "homepage": "https://github.com/progedu/assert-codeblock#readme",
+  "homepage": "https://github.com/progedu/assert-codeblock-dwango-progedu#readme",
   "dependencies": {
     "@types/diff": "^5.0.5",
     "@types/node": "^20.8.2",
