@@ -1,10 +1,10 @@
 import fs from "fs";
-import Diff from 'diff';
+import { structuredPatch } from 'diff';
 
 function getDiffFromFileNames(oldFileName: string, newFileName: string) {
   const oldStr = fs.readFileSync(oldFileName, { encoding: "utf-8" });
   const newStr = fs.readFileSync(newFileName, { encoding: "utf-8" });
-  const diff = Diff.structuredPatch(oldFileName, newFileName, oldStr, newStr, "", "", { context: 1e6 });
+  const diff = structuredPatch(oldFileName, newFileName, oldStr, newStr, "", "", { context: 1e6 });
   const ret: string[] = [];
   for (let i = 0; i < diff.hunks.length; i++) {
     ret.push(...diff.hunks[i].lines);
