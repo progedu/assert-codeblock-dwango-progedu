@@ -149,7 +149,7 @@ export function inspect_codeblock_and_return_message(textbook_filepath: string, 
     const expected_topnum = remaining_args.trim().split(/\s+/)[1];
 
     // 一方で、topnum は '45', '"45"', "'45'" のどれの可能性もあるのが厄介。めんどいので replace でごり押し
-    const actual_topnum = topnum.replaceAll(/['"]/, "");
+    const actual_topnum = topnum.replaceAll(/['"]/g, "");
 
     if (expected_topnum === actual_topnum) {
       return [];
