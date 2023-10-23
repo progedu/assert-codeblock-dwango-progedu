@@ -3,6 +3,14 @@
 
 ## 使い方
 
+基本的に、教材の中の「コードブロックを開始するトリプルバッククオート」の前に、<b>一行空行を挟み</b>、その前にコメント行
+
+`<!-- assert-codeblock コマンド名 引数1 引数2 -->`
+
+を入れることでマークする。
+
+空行がないと markdown がコードブロックの開始を認識できない場合があるので、<b>コメント行とコードブロックの間には必ず空行を挟むこと</b>。
+
 ### assert-codeblock exact: 教材に引用されているコードが、サンプルファイルと完全一致するかを調べる
 
 たとえば、`sample_files/1-1.py` に
@@ -18,6 +26,7 @@ hello()
 
 ````markdown
 <!-- assert-codeblock exact 1-1.py -->
+
 ```python
 def hello():
   print("Hello, World!")
@@ -67,6 +76,7 @@ for x in range(6):
 
 ````markdown
 <!-- assert-codeblock diff 1-1.py 1-2.py -->
+
 ```diff-python
  def hello():
    print("Hello, World!")
@@ -108,6 +118,7 @@ hello()
 
 ````markdown
 <!-- assert-codeblock partial 1-1.py 4 -->
+
 ```python
 hello()
 print("Hello")
