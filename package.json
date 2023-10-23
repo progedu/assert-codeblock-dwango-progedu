@@ -1,6 +1,6 @@
 {
   "name": "assert-codeblock-dwango-progedu",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "コードブロックが「file.xx の全体」「file.xx の一部」「file.xx と file.yy の diff」と一致しているかどうかを自動で検査するツール",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
