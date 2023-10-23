@@ -136,36 +136,65 @@ export function inspect_codeblock_and_return_message(textbook_filepath: string, 
     }];
   }
   const textbook_content = fs.readFileSync(textbook_filepath, { encoding: "utf-8" }).replace(/\r?\n/g, "\n");
-  const match = [...textbook_content.matchAll(/<!--\s*assert[-_]codeblock\s+(.*?)-->[\n\s]*```(.*?)\n([\s\S]*?)```/gm)]
-  if (!match.length) return [];
 
-  console.log(`\n\x1b[34m assert-codeblock: ${textbook_filepath} をチェック中\x1b[0m`);
-  return match.map(m => m.slice(1)).map(
-    ([command, file_type, matched_file_content]) => {
-      try {
-        const command_args = command.trim().split(/\s+/);
-        if (command_args[0] === "exact") {
-          return handle_exact(textbook_filepath, command_args, matched_file_content, config.src);
-        } else if (command_args[0] === "diff") {
-          return handle_diff(textbook_filepath, command_args, matched_file_content, config.src);
-        } else if (command_args[0] === "partial") {
-          return handle_partial(textbook_filepath, command_args, matched_file_content, config.src);
-        } else {
-          return {
-            is_success: false,
-            message: ` assert-codeblock は ${JSON.stringify(command)} というコマンドをサポートしていません`
+  /* partial に書いてある先頭行番号が 直前の topnum= に書いてある行番号と異なっていたら怒る */
+  const whether_consistent_with_topnum = [...textbook_content.matchAll(/topnum\s*=\s*(?<topnum>"\d+"|'\d+'|\d+)[^>]*>[\n\s]*<!--\s*assert[-_]codeblock\s+partial\s+(?<remaining_args>.*?)-->/gm)];
+
+  // 怒りを蓄えるための配列
+  const inconsistent_topnum_msg: TestRes[] = whether_consistent_with_topnum.flatMap(a => {
+    const { topnum, remaining_args } = a.groups as { topnum: string, remaining_args: string };
+    // たとえば、topnum: '45', remaining_args: '10-3.js 45 '
+
+    // remaining_args の方は簡単
+    const expected_topnum = remaining_args.trim().split(/\s+/)[1];
+
+    // 一方で、topnum は '45', '"45"', "'45'" のどれの可能性もあるのが厄介。めんどいので replace でごり押し
+    const actual_topnum = topnum.replaceAll(/['"]/, "");
+
+    if (expected_topnum === actual_topnum) {
+      return [];
+    } else {
+      return [{
+        is_success: false,
+        message: ` コマンド "partial ${remaining_args}" には行番号が ${expected_topnum} から始まると書いてありますが、直前の topnum= には行番号が ${actual_topnum} から始まると書いてあります`
+      }];
+    }
+  });
+
+  return [
+    ...inconsistent_topnum_msg,
+    ...(() => {
+      const match = [...textbook_content.matchAll(/<!--\s*assert[-_]codeblock\s+(.*?)-->[\n\s]*```(.*?)\n([\s\S]*?)```/gm)]
+      if (!match.length) return [];
+
+      console.log(`\n\x1b[34m assert-codeblock: ${textbook_filepath} をチェック中\x1b[0m`);
+      return match.map(m => m.slice(1)).map(
+        ([command, file_type, matched_file_content]) => {
+          try {
+            const command_args = command.trim().split(/\s+/);
+            if (command_args[0] === "exact") {
+              return handle_exact(textbook_filepath, command_args, matched_file_content, config.src);
+            } else if (command_args[0] === "diff") {
+              return handle_diff(textbook_filepath, command_args, matched_file_content, config.src);
+            } else if (command_args[0] === "partial") {
+              return handle_partial(textbook_filepath, command_args, matched_file_content, config.src);
+            } else {
+              return {
+                is_success: false,
+                message: ` assert-codeblock は ${JSON.stringify(command)} というコマンドをサポートしていません`
+              }
+            }
+          } catch (e) {
+            if (e instanceof WrongFileNameInCommandError) {
+              return {
+                is_success: false,
+                message: e.message
+              };
+            } else {
+              throw e;
+            }
           }
         }
-      } catch (e) {
-        if (e instanceof WrongFileNameInCommandError) {
-          return {
-            is_success: false,
-            message: e.message
-          };
-        } else {
-          throw e;
-        }
-      }
-    }
-  );
+      );
+    })()];
 }
