@@ -82,6 +82,7 @@ function handle_diff(textbook_filepath: string, command_args: string[], matched_
   const new_sample_file_path = src_folder + new_sample_file_name;
   const actual_diff = getDiffFromFileNames(old_sample_file_path, new_sample_file_path, command_args.join(" "));
   // 空行に対しての trailing space でテストが落ちるのはしょうもないので、あらかじめ両者から削っておく
+  // 一方で、行頭のスペースは、差があったら落とす方針にする
   if (trimEndOnAllLines(matched_file_content) !== trimEndOnAllLines(actual_diff)) {
     return {
       is_success: false, message: ` MISMATCH FOUND 
@@ -99,6 +100,16 @@ But the content in the textbook is as follows: \n\`\`\`\n${matched_file_content}
 }
 
 function handle_partial(textbook_filepath: string, command_args: string[], matched_file_content: string, src_folder: string): TestRes {
+  if (command_args[2] === undefined) {
+    return {
+      is_success: false,
+      message: ` INSUFFICIENT ARGUMENT: LINE NUMBER MISSING 
+in ${textbook_filepath}
+with the code block labeled "${command_args.join(" ")}"
+Note that 'assert-codeblock partial' requires a file name AND its line number: 
+for example, <!-- assert-codeblock partial 1-1.py 4 --> `,
+    }
+  }
   const starting_line_num = Number(command_args[2]);
   const sample_file_name = command_args[1];
   const sample_file_path = src_folder + sample_file_name;
@@ -111,6 +122,7 @@ function handle_partial(textbook_filepath: string, command_args: string[], match
   const partial_content = sample_file_content.split("\n").slice(starting_line_num - 1, starting_line_num - 1 + 行数).join("\n");
 
   // 空行に対しての trailing space でテストが落ちるのはしょうもないので、あらかじめ両者から削っておく
+  // 一方で、行頭のスペースは、差があったら落とす方針にする
   if (trimEndOnAllLines(partial_content.trimEnd()) !== trimEndOnAllLines(matched_file_content.trimEnd())) {
     return {
       is_success: false,
@@ -164,7 +176,7 @@ export function inspect_codeblock_and_return_message(textbook_filepath: string, 
   return [
     ...inconsistent_topnum_msg,
     ...(() => {
-      const match = [...textbook_content.matchAll(/<!--\s*assert[-_]codeblock\s+(.*?)-->[\n\s]*```(.*?)\n([\s\S]*?)```/gm)]
+      const match = [...textbook_content.matchAll(/<!--\s*assert[-_]codeblock\s+(.*?)-->[\n\s]*```(.*?)\n([\s\S]*?)```/gm)];
       if (!match.length) return [];
 
       console.log(`\n\x1b[34m assert-codeblock: ${textbook_filepath} をチェック中\x1b[0m`);
@@ -182,7 +194,7 @@ export function inspect_codeblock_and_return_message(textbook_filepath: string, 
               return {
                 is_success: false,
                 message: ` assert-codeblock は ${JSON.stringify(command)} というコマンドをサポートしていません`
-              }
+              };
             }
           } catch (e) {
             if (e instanceof WrongFileNameInCommandError) {
