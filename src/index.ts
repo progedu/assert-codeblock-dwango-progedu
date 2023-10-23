@@ -38,7 +38,7 @@ export function inspect_codeblock(textbook_filepath: string, config: { src: stri
 }
 export function inspect_codeblock_and_return_message(textbook_filepath: string, config: { src: string }): { success: Boolean, message: string, additionally?: unknown }[] {
   const textbook_content = fs.readFileSync(textbook_filepath, { encoding: "utf-8" }).replace(/\r?\n/g, "\n");
-  const match = [...textbook_content.matchAll(/<!--\s+assert-codeblock\s+(.*?)-->[\n\s]*```(.*?)\n([\s\S]*?)```/gm)]
+  const match = [...textbook_content.matchAll(/<!--\s*assert[-_]codeblock\s+(.*?)-->[\n\s]*```(.*?)\n([\s\S]*?)```/gm)]
   if (!match.length) return [];
 
   console.log(`\n\x1b[34m assert-codeblock: ${textbook_filepath} をチェック中\x1b[0m`);

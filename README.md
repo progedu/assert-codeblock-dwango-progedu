@@ -146,3 +146,7 @@ AssertCodeblock.inspect_codeblock(textbook_filepath, config) // true
 現状の実装は「ファイル A とファイル B の間の diff は、教材に書いてある通りの diff と一致する」かどうかを検査している。
 
 よって、片側誤りが起こる。
+
+このスクリプトは正規表現 `<!--\s*assert[-_]codeblock\s+` にマッチするコメントだけに対して検査を行うので、
+
+この diff の片側誤りのせいでテストが通らない場合は、 `<!-- FIXME: assert-codeblock` などとすると黙殺できる。
