@@ -156,7 +156,7 @@ export function inspect_codeblock_and_return_message(textbook_filepath: string, 
     } else {
       return [{
         is_success: false,
-        message: ` コマンド "partial ${remaining_args}" には行番号が ${expected_topnum} から始まると書いてありますが、直前の topnum= には行番号が ${actual_topnum} から始まると書いてあります`
+        message: ` MISMATCH FOUND: コマンド "partial ${remaining_args}" には行番号が ${expected_topnum} から始まると書いてありますが、直前の topnum= には行番号が ${actual_topnum} から始まると書いてあります`
       }];
     }
   });
