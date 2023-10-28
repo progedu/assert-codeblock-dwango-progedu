@@ -176,12 +176,12 @@ export function inspect_codeblock_and_return_message(textbook_filepath: string, 
   return [
     ...inconsistent_topnum_msg,
     ...(() => {
-      const match = [...textbook_content.matchAll(/<!--\s*assert[-_]codeblock\s+(.*?)-->[\n\s]*```(.*?)\n([\s\S]*?)```/gm)];
+      const match = [...textbook_content.matchAll(/<!--\s*assert[-_]codeblock\s+(.*?)-->[\n\s]*(?<code_fence>`{3,}|~{3,})([\w\d -.]*?)\n([\s\S]*?)\k<code_fence>/gm)];
       if (!match.length) return [];
 
       console.log(`\n\x1b[34m assert-codeblock: ${textbook_filepath} をチェック中\x1b[0m`);
       return match.map(m => m.slice(1)).map(
-        ([command, file_type, matched_file_content]) => {
+        ([command, code_fence, file_type, matched_file_content]) => {
           try {
             const command_args = command.trim().split(/\s+/);
             if (command_args[0] === "exact") {
