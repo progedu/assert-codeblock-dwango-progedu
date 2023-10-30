@@ -1,31 +1,22 @@
 import fs from "fs";
 import { structuredPatch } from 'diff';
+import { PatchApplyError, apply_diff } from "./apply_diff";
 
 class WrongFileNameInCommandError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "WrongFileNameInCommandError";
+  static {
+    this.prototype.name = "WrongFileNameInCommandError";
   }
 }
 
-function readFileSync(file_name: string, context: string): string {
+function readFileSync(file_name: string, code_block_label: string): string {
   if (!fs.existsSync(file_name)) {
     throw new WrongFileNameInCommandError(` FILE NOT FOUND 
-Cannot find a file "${file_name}" mentioned in the code block labeled "${context}" `);
+Cannot find a file "${file_name}" mentioned in the code block labeled "${code_block_label}" `);
   }
   return fs.readFileSync(file_name, { encoding: "utf-8" });
 }
 
-function getDiffFromFileNames(oldFileName: string, newFileName: string, context: string) {
-  const oldStr = readFileSync(oldFileName, context);
-  const newStr = readFileSync(newFileName, context);
-  const diff = structuredPatch(oldFileName, newFileName, oldStr, newStr, "", "", { context: 1e6 });
-  const ret: string[] = [];
-  for (let i = 0; i < diff.hunks.length; i++) {
-    ret.push(...diff.hunks[i].lines);
-  }
-  return ret.join('\n') + '\n';
-}
+
 
 function trimEndOnAllLines(str: string) {
   return str.split("\n").map(line => line.trimEnd()).join("\n");
@@ -75,27 +66,66 @@ Please compare the textbook with the content of ${sample_file_path} `
   }
 }
 
-function handle_diff(textbook_filepath: string, command_args: string[], matched_file_content: string, src_folder: string): TestRes {
+function FILTER(s: string): string {
+  return trimEndOnAllLines(s.replace(/\r?\n/g, "\n"))
+}
+
+function handle_diff(textbook_filepath: string, command_args: string[], expected_diff: string, src_folder: string): TestRes {
   const old_sample_file_name = command_args[1];
   const new_sample_file_name = command_args[2];
   const old_sample_file_path = src_folder + old_sample_file_name;
   const new_sample_file_path = src_folder + new_sample_file_name;
-  const actual_diff = getDiffFromFileNames(old_sample_file_path, new_sample_file_path, command_args.join(" "));
-  // 空行に対しての trailing space でテストが落ちるのはしょうもないので、あらかじめ両者から削っておく
-  // 一方で、行頭のスペースは、差があったら落とす方針にする
-  if (trimEndOnAllLines(matched_file_content) !== trimEndOnAllLines(actual_diff)) {
-    return {
-      is_success: false, message: ` MISMATCH FOUND 
+  const code_block_label = command_args.join(" ");
+  const oldStr = readFileSync(old_sample_file_path, code_block_label);
+  const newStr = readFileSync(new_sample_file_path, code_block_label);
+  const actual_diff = (() => {
+    const diff = structuredPatch(old_sample_file_path, new_sample_file_path, oldStr, newStr, "", "", { context: 1e6 });
+    const ret: string[] = [];
+    for (let i = 0; i < diff.hunks.length; i++) {
+      ret.push(...diff.hunks[i].lines);
+    }
+    return ret.join('\n') + '\n';
+  })();
+
+  try {
+    let expected_newStr = apply_diff(oldStr, trimEndOnAllLines(expected_diff))
+
+    // 空行に対しての trailing space でテストが落ちるのはしょうもないので、あらかじめ両者から削っておく
+    // 一方で、行頭のスペースは、差があったら落とす方針にする
+    if (FILTER(expected_newStr) === FILTER(newStr)) {
+      // diff というものは一意ではないので、
+      // diff ライブラリが生成した「A と B の 差分」と教材に書いてある「A と B の差分」は一致する保証がない。
+      // 「ファイル A に対して、教材に書いてある通りの diff を適用すると、ファイル B になる」かどうかを検査しなければいけない。
+      return {
+        is_success: true,
+        message: ` OK: "${textbook_filepath}" のコードブロック "diff ${old_sample_file_name} ${new_sample_file_name}" を "${old_sample_file_path}" に適用すると "${new_sample_file_path}" と一致しています`
+      };
+    } else if (trimEndOnAllLines(expected_diff) === trimEndOnAllLines(actual_diff)) {
+      // diff が一致してくれたら、OK
+      return {
+        is_success: true,
+        message: ` OK: "${textbook_filepath}" のコードブロック "diff ${old_sample_file_name} ${new_sample_file_name}" は "${old_sample_file_path}" と "${new_sample_file_path}" の diff と一致しています`
+      };
+    } else {
+      return {
+        is_success: false, message: ` MISMATCH FOUND 
 in ${textbook_filepath}
 with the code block labeled "diff ${old_sample_file_name} ${new_sample_file_name}"
 The diff of ${old_sample_file_path} with ${new_sample_file_path} is as follows: \n\`\`\`\n${actual_diff}\`\`\` 
-But the content in the textbook is as follows: \n\`\`\`\n${matched_file_content}\`\`\` 
+But the content in the textbook is as follows: \n\`\`\`\n${expected_diff}\`\`\` 
 `};
-  } else {
-    return {
-      is_success: true,
-      message: ` OK: "${textbook_filepath}" のコードブロック "diff ${old_sample_file_name} ${new_sample_file_name}" は "${old_sample_file_path}" と "${new_sample_file_path}" の diff と一致しています`
-    };
+    }
+  } catch (e) {
+    if (e instanceof PatchApplyError) {
+      return {
+        is_success: false, message: `  CANNOT APPLY THE PATCH
+[original message: \`${e.message}\`]
+in ${textbook_filepath}
+with the code block labeled "diff ${old_sample_file_name} ${new_sample_file_name}"
+The diff of ${old_sample_file_path} with ${new_sample_file_path} is as follows: \n\`\`\`\n${actual_diff}\`\`\` 
+But the content in the textbook is as follows: \n\`\`\`\n${expected_diff}\`\`\` `
+      }
+    } else { throw e; }
   }
 }
 
