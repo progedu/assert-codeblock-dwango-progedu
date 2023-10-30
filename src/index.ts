@@ -67,6 +67,10 @@ Please compare the textbook with the content of ${sample_file_path} `
   }
 }
 
+function FILTER(s: string): string {
+  return trimEndOnAllLines(s.replace(/\r?\n/g, "\n"))
+}
+
 function handle_diff(textbook_filepath: string, command_args: string[], expected_diff: string, src_folder: string): TestRes {
   const old_sample_file_name = command_args[1];
   const new_sample_file_name = command_args[2];
@@ -83,21 +87,22 @@ function handle_diff(textbook_filepath: string, command_args: string[], expected
     }
     return ret.join('\n') + '\n';
   })();
+
   // 空行に対しての trailing space でテストが落ちるのはしょうもないので、あらかじめ両者から削っておく
   // 一方で、行頭のスペースは、差があったら落とす方針にする
-  if (trimEndOnAllLines(expected_diff) === trimEndOnAllLines(actual_diff)) {
-    // diff が一致してくれたら、その時点で OK
-    return {
-      is_success: true,
-      message: ` OK: "${textbook_filepath}" のコードブロック "diff ${old_sample_file_name} ${new_sample_file_name}" は "${old_sample_file_path}" と "${new_sample_file_path}" の diff と一致しています`
-    };
-  } else if (apply_diff(oldStr, trimEndOnAllLines(expected_diff)) === trimEndOnAllLines(actual_diff)) {
-    // しかし、diff というものは一意ではないので、
+  if (FILTER(apply_diff(oldStr, trimEndOnAllLines(expected_diff))) === FILTER(newStr)) {
+    // diff というものは一意ではないので、
     // diff ライブラリが生成した「A と B の 差分」と教材に書いてある「A と B の差分」は一致する保証がない。
     // 「ファイル A に対して、教材に書いてある通りの diff を適用すると、ファイル B になる」かどうかを検査しなければいけない。
     return {
       is_success: true,
       message: ` OK: "${textbook_filepath}" のコードブロック "diff ${old_sample_file_name} ${new_sample_file_name}" を "${old_sample_file_path}" に適用すると "${new_sample_file_path}" と一致しています`
+    };
+  } else if (trimEndOnAllLines(expected_diff) === trimEndOnAllLines(actual_diff)) {
+    // diff が一致してくれたら、OK
+    return {
+      is_success: true,
+      message: ` OK: "${textbook_filepath}" のコードブロック "diff ${old_sample_file_name} ${new_sample_file_name}" は "${old_sample_file_path}" と "${new_sample_file_path}" の diff と一致しています`
     };
   } else {
     return {
