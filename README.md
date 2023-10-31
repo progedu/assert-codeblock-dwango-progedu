@@ -209,21 +209,16 @@ AssertCodeblock.inspect_codeblock(textbook_filepath, config) // true
 
 ```js
 const AssertCodeblock = require('assert-codeblock-dwango-progedu');
-const config = {
-  src: "./sample_files/"
-};
-
-const textbook_filepath_arr = [];
-for (let 節 = 1; 節 <= 24; 節++) {
-  const name = `ABIKZZ05_G${節.toString().padStart(3, '0')}`;
-  const textbook_filepath = `./${name}/${name}.md`;
-  textbook_filepath_arr.push(textbook_filepath);
-}
-
-AssertCodeblock.run_all_tests_and_exit(textbook_filepath_arr, config);
+AssertCodeblock.run_all_tests_and_exit([
+  "textbook-001.md",
+  "textbook-002.md",
+  "textbook-003.md",
+  "textbook-004.md",
+  "textbook-005.md"
+], { src: "./sample_files/" });
 ```
 
-一括でテストしてほしいが戻り値が bool で欲しい場合は、 `AssertCodeblock.run_all_tests` を呼ぶこと。
+一括でテストしてほしいが戻り値が bool で欲しい場合は、代わりに `AssertCodeblock.run_all_tests` を呼ぶこと。
 
 ## その他
 
