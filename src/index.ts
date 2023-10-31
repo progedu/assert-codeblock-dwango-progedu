@@ -1,6 +1,6 @@
 import fs from "fs";
 import { structuredPatch } from 'diff';
-import { PatchApplyError, apply_diff } from "./apply_diff";
+import { PatchApplyError, apply_diff, apply_diff_on_lines } from "./apply_diff";
 
 class WrongFileNameInCommandError extends Error {
   static {
@@ -29,7 +29,7 @@ export function inspect_codeblock(textbook_filepath: string, config: { src: stri
     if (is_success) {
       console.log(`\x1b[32m${message}\x1b[0m`);
     } else {
-      console.log(`\x1b[33m${message}\x1b[0m`);
+      console.log(`\x1b[31m${message}\x1b[0m`);
     }
 
     if (additionally) {
@@ -129,6 +129,72 @@ But the content in the textbook is as follows: \n\`\`\`\n${expected_diff}\`\`\` 
   }
 }
 
+function handle_diff_partial(textbook_filepath: string, command_args: string[], expected_diff: string, src_folder: string): TestRes {
+  const old_sample_file_name = command_args[1];
+  const new_sample_file_name = command_args[2];
+  if (command_args[3] === undefined) {
+    return {
+      is_success: false,
+      message: ` INSUFFICIENT ARGUMENT: LINE NUMBER MISSING 
+in ${textbook_filepath}
+with the code block labeled "${command_args.join(" ")}"
+Note that 'assert-codeblock diff-partial' requires two file names AND one or two line number at which the diff starts: 
+for example, <!-- assert-codeblock diff-partial 1-1.py 1-2.py 13 -->, in which the old and the new line numbers both start at 13,
+or <!-- assert-codeblock diff-partial 1-1.py 1-2.py 13 14 -->, in which the old line number starts at 13 but the new one starts at 14.`,
+    }
+  }
+  const starting_line_num = Number(command_args[3]) - 1;
+  const old_starting_line_num = command_args[4] === undefined ? starting_line_num : Number(command_args[4]) - 1;
+
+  const old_sample_file_path = src_folder + old_sample_file_name;
+  const new_sample_file_path = src_folder + new_sample_file_name;
+  const code_block_label = command_args.join(" ");
+  const oldStr = readFileSync(old_sample_file_path, code_block_label);
+  const newStr = readFileSync(new_sample_file_path, code_block_label);
+  const entire_diff = (() => {
+    const diff = structuredPatch(old_sample_file_path, new_sample_file_path, oldStr, newStr, "", "", { context: 1e6 });
+    const ret: string[] = [];
+    for (let i = 0; i < diff.hunks.length; i++) {
+      ret.push(...diff.hunks[i].lines);
+    }
+    return ret.join('\n') + '\n';
+  })();
+
+  try {
+    const diffStr = trimEndOnAllLines(expected_diff);
+    const old_str_lines = oldStr.split("\n");
+    const diff_lines = diffStr.split("\n");
+    let expected_newStr_lines = FILTER(apply_diff_on_lines(old_str_lines, diff_lines, old_starting_line_num).join("\n")).split("\n");
+    let actual_newStr_lines = FILTER(newStr).split("\n");
+
+    if (actual_newStr_lines.slice(starting_line_num).join("\n").startsWith(expected_newStr_lines.join("\n"))) {
+      return {
+        is_success: true,
+        message: ` OK: "${textbook_filepath}" のコードブロック "${command_args.join(" ")}" を "${old_sample_file_path}" の ${old_starting_line_num + 1} 行目からに適用すると "${new_sample_file_path}" の ${starting_line_num + 1} 行目からと一致しています`
+      };
+    } else {
+      return {
+        is_success: false, message: ` MISMATCH FOUND 
+in ${textbook_filepath}
+with the code block labeled "${command_args.join(" ")}"
+The full diff of ${old_sample_file_path} with ${new_sample_file_path} is as follows: \n\`\`\`\n${entire_diff}\`\`\` 
+The content in the textbook, intended to be the partial diff, is as follows: \n\`\`\`\n${expected_diff}\`\`\` 
+`};
+    }
+  } catch (e) {
+    if (e instanceof PatchApplyError) {
+      return {
+        is_success: false, message: `  CANNOT APPLY THE PATCH
+[original message: \`${e.message}\`]
+in ${textbook_filepath}
+with the code block labeled "${command_args.join(" ")}"
+The full total diff of ${old_sample_file_path} with ${new_sample_file_path} is as follows: \n\`\`\`\n${entire_diff}\`\`\` 
+The content in the textbook, intended to be the partial diff, is as follows: \n\`\`\`\n${expected_diff}\`\`\` `
+      }
+    } else { throw e; }
+  }
+}
+
 function handle_partial(textbook_filepath: string, command_args: string[], matched_file_content: string, src_folder: string): TestRes {
   if (command_args[2] === undefined) {
     return {
@@ -220,6 +286,8 @@ export function inspect_codeblock_and_return_message(textbook_filepath: string, 
               return handle_diff(textbook_filepath, command_args, matched_file_content, config.src);
             } else if (command_args[0] === "partial") {
               return handle_partial(textbook_filepath, command_args, matched_file_content, config.src);
+            } else if (command_args[0] === "diff-partial") {
+              return handle_diff_partial(textbook_filepath, command_args, matched_file_content, config.src);
             } else {
               return {
                 is_success: false,

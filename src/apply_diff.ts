@@ -8,36 +8,51 @@ export class PatchApplyError extends Error {
 export function apply_diff(oldStr: string, diffStr: string): string {
   const old_str_lines = oldStr.split("\n");
   const diff_lines = diffStr.split("\n");
+  return apply_diff_on_lines(old_str_lines, diff_lines).join("\n");
+}
+
+/**
+ * 
+ * @param old_str_lines 
+ * @param diff_lines 
+ * @param old_starting_line_num patch 適用前の開始行番号 (0-indexed)
+ * @returns 
+ */
+export function apply_diff_on_lines(old_str_lines: string[], diff_lines: string[], old_starting_line_num: number = 0): string[] {
   const ans_lines: string[] = [];
   let i = 0;
-  for (let j = 0; j < old_str_lines.length;) {
-    const patch = diff_lines[i];
-    if (patch === "") { // intended as an empty line kept as is
+  for (let j = old_starting_line_num; j < old_str_lines.length;) {
+    if (diff_lines[i] === undefined) { // diff-partial; the diff ran out
+      // Since there are no more commands to be applied,
+      // the remaining portion of the string should go through as-is
+      ans_lines.push(...old_str_lines.slice(j));
+      break;
+    } else if (diff_lines[i] === "") { // intended as an empty line kept as is
       if (old_str_lines[j].trimEnd() !== "") {
-        throw new PatchApplyError(`The diff patch (on line ${i}) expects an empty line; got a non-empty line (on line ${j}) \`${old_str_lines[j].trimEnd()}\``);
+        throw new PatchApplyError(`The diff patch (in line ${i + 1}) expects an empty line; got a non-empty line (in line ${j + 1}) \`${old_str_lines[j].trimEnd()}\``);
       }
       ans_lines.push(old_str_lines[j]);
       i++;
       j++;
-    } else if (patch[0] === " ") { // keep as is
+    } else if (diff_lines[i][0] === " ") { // keep as is
       ans_lines.push(old_str_lines[j]);
       i++;
       j++;
-    } else if (patch[0] === "-") { // removed row
+    } else if (diff_lines[i][0] === "-") { // removed row
       // check that the row removed is correct
-      if (patch.slice(1) !== old_str_lines[j].trimEnd()) {
-        throw new PatchApplyError(`The diff patch (on line ${i}) expects the line \`${patch.slice(1)}\` to be removed, but the actual line (on line ${j}) is \`${old_str_lines[j]}\``)
+      if (diff_lines[i].slice(1) !== old_str_lines[j].trimEnd()) {
+        throw new PatchApplyError(`The diff patch (in line ${i + 1}) expects the line \`${diff_lines[i].slice(1)}\` to be removed, but the actual line (on line ${j + 1}) is \`${old_str_lines[j]}\``)
       }
       i++;
       j++;
-    } else if (patch[0] === "+") { // added row
+    } else if (diff_lines[i][0] === "+") { // added row
       while (diff_lines[i][0] === "+") {
         ans_lines.push(diff_lines[i].slice(1));
         i++;
       }
     } else {
-      throw new PatchApplyError("diff patch started with an unexpected character: `" + patch + "`");
+      throw new PatchApplyError(`(in line ${i + 1}) diff patch started with an unexpected character: \`${diff_lines[i]}\``);
     }
   }
-  return ans_lines.join("\n");
+  return ans_lines;
 };
