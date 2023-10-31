@@ -23,9 +23,10 @@ export function apply_diff_on_lines(old_str_lines: string[], diff_lines: string[
   let i = 0;
   for (let j = old_starting_line_num; j < old_str_lines.length;) {
     if (diff_lines[i] === undefined) { // diff-partial; the diff ran out
-      // Since there are no more commands to be applied,
-      // the remaining portion of the string should go through as-is
-      ans_lines.push(...old_str_lines.slice(j));
+      // It seems that there are no more commands to be applied.
+      // However, since we might still have some more diffs (that are not listed in this partial diff),
+      // we conclude that we know nothing more about what results when the full patch is applied.
+      // Hence we should immediately exit the loop 
       break;
     } else if (diff_lines[i] === "") { // intended as an empty line kept as is
       if (old_str_lines[j].trimEnd() !== "") {

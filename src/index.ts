@@ -177,6 +177,15 @@ or <!-- assert-codeblock diff-partial 1-1.py 1-2.py 13 14 -->, in which the old 
         is_success: false, message: ` MISMATCH FOUND 
 in ${textbook_filepath}
 with the code block labeled "${command_args.join(" ")}"
+**************************************
+DEBUG MESSAGE
+\`actual_newStr_lines.slice(starting_line_num).join("\n")\` is 
+\`\`\`
+${actual_newStr_lines.slice(starting_line_num).join("\n")}\`\`\`
+which does not start with \`expected_newStr_lines.join("\n")\`, which is
+\`\`\`
+${expected_newStr_lines.join("\n")}\`\`\`
+**************************************
 The full diff of ${old_sample_file_path} with ${new_sample_file_path} is as follows: \n\`\`\`\n${entire_diff}\`\`\` 
 The content in the textbook, intended to be the partial diff, is as follows: \n\`\`\`\n${expected_diff}\`\`\` 
 `};
