@@ -321,3 +321,39 @@ export function inspect_codeblock_and_return_message(textbook_filepath: string, 
       );
     })()];
 }
+
+export function run_all_tests(textbook_filepath_arr: string[], config: { src: string }) {
+  let count_all = 0;
+  let count_success = 0;
+
+  textbook_filepath_arr.forEach(textbook_filepath => {
+    inspect_codeblock_and_return_message(textbook_filepath, config).forEach(({ is_success, message, additionally }) => {
+      if (is_success) {
+        count_all++;
+        count_success++;
+        console.log(`\x1b[32m${message}\x1b[0m`);
+      } else {
+        count_all++;
+        console.log(`\x1b[31m${message}\x1b[0m`);
+      }
+
+      if (additionally) {
+        console.log(additionally);
+      }
+    });
+  })
+
+  if (count_all === count_success) {
+    console.log(`\n assert-codeblock: 全てチェックしました`);
+    console.log("\x1b[32m✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅\x1b[0m")
+    console.log(`\x1b[32m  all tests passed (${count_success}/${count_all} successful) \x1b[0m`)
+    console.log("\x1b[32m✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅\x1b[0m")
+    process.exit(0);
+  } else {
+    console.error(`\n assert-codeblock: 全てチェックしました`);
+    console.error(`❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌`);
+    console.error(`\x1b[31m  SOME TESTS FAILED (${count_success}/${count_all} successful)\x1b[0m`);
+    console.error(`❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌`);
+    process.exit(1);
+  }
+}
