@@ -25,9 +25,9 @@ export function apply_diff_on_lines(old_str_lines: string[], diff_lines: string[
     if (diff_lines[i] === undefined) { // diff-partial; the diff ran out
       // It seems that there are no more commands to be applied.
       // However, since we might still have some more diffs (that are not listed in this partial diff),
-      // we conclude that we know nothing more about what results when the full patch is applied.
-      // Hence we should immediately exit the loop 
-      break;
+      // we conclude that we know nothing more about the result of applying the full patch.
+      // Hence we should immediately exit the function.
+      return ans_lines;
     } else if (diff_lines[i] === "") { // intended as an empty line kept as is
       if (old_str_lines[j].trimEnd() !== "") {
         throw new PatchApplyError(`The diff patch (in line ${i + 1}) expects an empty line; got a non-empty line (in line ${j + 1}) \`${old_str_lines[j].trimEnd()}\``);
@@ -47,7 +47,17 @@ export function apply_diff_on_lines(old_str_lines: string[], diff_lines: string[
       i++;
       j++;
     } else if (diff_lines[i][0] === "+") { // added row
-      while (diff_lines[i][0] === "+") {
+      while (true) {
+        if (diff_lines[i] === undefined) {
+          // It seems that there are no more commands to be applied.
+          // However, since we might still have some more diffs (that are not listed in this partial diff),
+          // we conclude that we know nothing more about the result of applying the full patch.
+          // Hence we should immediately exit the function.
+          return ans_lines;
+        }
+        if (diff_lines[i][0] !== "+") {
+          break;
+        }
         ans_lines.push(diff_lines[i].slice(1));
         i++;
       }
