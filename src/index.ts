@@ -164,6 +164,10 @@ or <!-- assert-codeblock diff-partial 1-1.py 1-2.py 13 14 -->, in which the old 
     const diffStr = trimEndOnAllLines(expected_diff);
     const old_str_lines = oldStr.split("\n");
     const diff_lines = diffStr.split("\n");
+    // split すると配列末尾に空文字列が入るが、これは要らないので削除
+    if (diff_lines[diff_lines.length - 1] === "") {
+      diff_lines.length--;
+    }
     let expected_newStr_lines = FILTER(apply_diff_on_lines(old_str_lines, diff_lines, old_starting_line_num).join("\n")).split("\n");
     let actual_newStr_lines = FILTER(newStr).split("\n");
 
