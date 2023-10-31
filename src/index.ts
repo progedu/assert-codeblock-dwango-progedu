@@ -348,12 +348,20 @@ export function run_all_tests(textbook_filepath_arr: string[], config: { src: st
     console.log("\x1b[32m✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅\x1b[0m")
     console.log(`\x1b[32m  all tests passed (${count_success}/${count_all} successful) \x1b[0m`)
     console.log("\x1b[32m✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅\x1b[0m")
-    process.exit(0);
+    return true;
   } else {
     console.error(`\n assert-codeblock: 全てチェックしました`);
     console.error(`❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌`);
     console.error(`\x1b[31m  SOME TESTS FAILED (${count_success}/${count_all} successful)\x1b[0m`);
     console.error(`❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌`);
+    return false;
+  }
+}
+
+export function run_all_tests_and_exit(textbook_filepath_arr: string[], config: { src: string }) {
+  if (run_all_tests(textbook_filepath_arr, config)) {
+    process.exit(0);
+  } else {
     process.exit(1);
   }
 }
