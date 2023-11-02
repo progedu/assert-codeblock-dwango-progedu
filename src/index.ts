@@ -289,37 +289,39 @@ export function inspect_codeblock_and_return_message(textbook_filepath: string, 
       if (!match.length) return [];
 
       console.log(`\n\x1b[34m assert-codeblock: ${textbook_filepath} をチェック中\x1b[0m`);
-      return match.map(m => m.slice(1)).map(
-        ([command, code_fence, file_type, matched_file_content]) => {
-          try {
-            const command_args = command.trim().split(/\s+/);
-            if (command_args[0] === "exact") {
-              return handle_exact(textbook_filepath, command_args, matched_file_content, config.src);
-            } else if (command_args[0] === "diff") {
-              return handle_diff(textbook_filepath, command_args, matched_file_content, config.src);
-            } else if (command_args[0] === "partial") {
-              return handle_partial(textbook_filepath, command_args, matched_file_content, config.src);
-            } else if (command_args[0] === "diff-partial") {
-              return handle_diff_partial(textbook_filepath, command_args, matched_file_content, config.src);
-            } else {
-              return {
-                is_success: false,
-                message: ` assert-codeblock は ${JSON.stringify(command)} というコマンドをサポートしていません`
-              };
-            }
-          } catch (e) {
-            if (e instanceof WrongFileNameInCommandError) {
-              return {
-                is_success: false,
-                message: e.message
-              };
-            } else {
-              throw e;
-            }
-          }
-        }
+      return match.map(([_, command, code_fence, file_type, matched_file_content]) =>
+        run_command_and_get_result(textbook_filepath, command, matched_file_content, config)
       );
     })()];
+}
+
+function run_command_and_get_result(textbook_filepath: string, command: string, matched_file_content: string, config: { src: string }): TestRes {
+  try {
+    const command_args = command.trim().split(/\s+/);
+    if (command_args[0] === "exact") {
+      return handle_exact(textbook_filepath, command_args, matched_file_content, config.src);
+    } else if (command_args[0] === "diff") {
+      return handle_diff(textbook_filepath, command_args, matched_file_content, config.src);
+    } else if (command_args[0] === "partial") {
+      return handle_partial(textbook_filepath, command_args, matched_file_content, config.src);
+    } else if (command_args[0] === "diff-partial") {
+      return handle_diff_partial(textbook_filepath, command_args, matched_file_content, config.src);
+    } else {
+      return {
+        is_success: false,
+        message: ` assert-codeblock は ${JSON.stringify(command)} というコマンドをサポートしていません`
+      };
+    }
+  } catch (e) {
+    if (e instanceof WrongFileNameInCommandError) {
+      return {
+        is_success: false,
+        message: e.message
+      };
+    } else {
+      throw e;
+    }
+  }
 }
 
 export function run_all_tests(textbook_filepath_arr: string[], config: { src: string }) {
