@@ -5,7 +5,8 @@ import { TestRes } from "./util";
 
 export function inspect_codeblock(textbook_filepath: string, config: { src: string }): boolean {
   let all_success = true;
-  inspect_codeblock_and_return_message(textbook_filepath, config).forEach(({ is_success, message, additionally }) => {
+  const results = inspect_codeblock_and_return_message(textbook_filepath, config);
+  for (const { is_success, message, additionally } of results) {
     if (is_success) {
       console.log(`\x1b[32m${message}\x1b[0m`);
     } else {
@@ -19,7 +20,7 @@ export function inspect_codeblock(textbook_filepath: string, config: { src: stri
     if (!is_success) {
       all_success = false;
     }
-  });
+  }
   return all_success;
 }
 
@@ -73,22 +74,23 @@ export function run_all_tests(textbook_filepath_arr: string[], config: { src: st
   let count_all = 0;
   let count_success = 0;
 
-  textbook_filepath_arr.forEach(textbook_filepath => {
-    inspect_codeblock_and_return_message(textbook_filepath, config).forEach(({ is_success, message, additionally }) => {
+  for (const filepath of textbook_filepath_arr) {
+    const results = inspect_codeblock_and_return_message(filepath, config);
+    for (const { is_success, message, additionally } of results) {
+      count_all++;
+
       if (is_success) {
-        count_all++;
         count_success++;
         console.log(`\x1b[32m${message}\x1b[0m`);
       } else {
-        count_all++;
         console.log(`\x1b[31m${message}\x1b[0m`);
       }
 
       if (additionally) {
         console.log(additionally);
       }
-    });
-  })
+    }
+  }
 
   if (count_all === count_success) {
     console.log(`\n assert-codeblock: 全てチェックしました`);
