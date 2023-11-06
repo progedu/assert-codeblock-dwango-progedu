@@ -1,7 +1,12 @@
 import fs from "fs";
+import os from 'os';
+import path from 'path';
 
 import { run_command_and_get_result } from "./command";
 import { TestRes } from "./util";
+
+const REGEX_FOR_DETECTING_COMMAND_AND_CODEBLOCK = /<!--\s*assert[-_]codeblock\s+(.*?)-->[\n\s]*(?<code_fence>`{3,}|~{3,})([\w\d -.]*?)\n([\s\S]*?)\k<code_fence>/gm;
+const REGEX_FOR_DETECTING_COMMAND = /(<!--\s*assert[-_]codeblock\s+)(.*?)(-->)/gm;
 
 export function inspect_codeblock(textbook_filepath: string, config: { src: string }): boolean {
   let all_success = true;
@@ -60,7 +65,7 @@ export function inspect_codeblock_and_return_message(textbook_filepath: string, 
   return [
     ...inconsistent_topnum_msg,
     ...(() => {
-      const match = [...textbook_content.matchAll(/<!--\s*assert[-_]codeblock\s+(.*?)-->[\n\s]*(?<code_fence>`{3,}|~{3,})([\w\d -.]*?)\n([\s\S]*?)\k<code_fence>/gm)];
+      const match = [...textbook_content.matchAll(REGEX_FOR_DETECTING_COMMAND_AND_CODEBLOCK)];
       if (!match.length) return [];
 
       console.log(`\n\x1b[34m assert-codeblock: ${textbook_filepath} をチェック中\x1b[0m`);
@@ -114,3 +119,70 @@ export function run_all_tests_and_exit(textbook_filepath_arr: string[], config: 
     process.exit(1);
   }
 }
+
+function replace(str: string, replacements: ReadonlyArray<[string, string]>) {
+  const candidates = replacements.filter(([before, _after]) => before === str);
+  if (candidates.length > 1) {
+    throw new Error(`assert-codeblock: リネームに失敗しました。\n"${str}" の置き換え先候補が複数（${JSON.stringify(candidates)}）ありま`)
+  } else if (candidates.length === 0) {
+    return str;
+  } else {
+    return candidates[0][1]; // 先頭の after を返す
+  }
+}
+
+export function rename_src_files(
+  textbook_filepath_arr: string[],
+  config: { src: string },
+  replacements: ReadonlyArray<[string, string]>
+) {
+  const get_tmp_dir = () => fs.mkdtempSync(`${os.tmpdir()}${path.sep}`);
+  const remove_tmp_dir = (path: string) => fs.rmSync(path, { recursive: true });
+
+  // ファイルの方を置き換える
+  const tmp_dir = get_tmp_dir();
+
+  // 先に全部を一時フォルダに動かしてから
+  for (const [before, after] of replacements) {
+    fs.renameSync(`${config.src}${path.sep}${before}`, `${tmp_dir}${after}`);
+  }
+
+  // その後で一気に一時フォルダから戻す
+  fs.readdirSync(tmp_dir).forEach(filepath => {
+    fs.renameSync(filepath, `${config.src}${path.sep}${path.basename(filepath)}`)
+  });
+
+  remove_tmp_dir(tmp_dir);
+
+  // 教材の方を置き換える
+  for (const filepath of textbook_filepath_arr) {
+    if (!fs.existsSync(filepath)) {
+      return [{
+        is_success: false,
+        message: ` INCORRECT TEXTBOOK FILEPATH "${filepath}"`
+      }];
+    }
+    const textbook_content = fs.readFileSync(filepath, { encoding: "utf-8" }).replace(/\r?\n/g, "\n");
+
+    console.log(`\n\x1b[34m assert-codeblock: ${filepath} をチェック中\x1b[0m`);
+    const new_content = textbook_content.replaceAll(REGEX_FOR_DETECTING_COMMAND, (_match, before_command, command, after_command) => {
+      const command_args = command.trim().split(/\s+/);
+      if (command_args[0] === "exact" || command_args[0] === "partial") {
+        // `assert-codeblock exact ファイル名`
+        // `assert-codeblock partial ファイル名 行番号`
+        command_args[1] = replace(command_args[1], replacements);
+      } else if (command_args[0] === "diff" || command_args[0] === "diff-partial") {
+        // `assert-codeblock diff 旧ファイル 新ファイル`
+        // `assert-codeblock diff-partial 旧ファイル名 新ファイル 行番号` または `assert-codeblock diff-partial 旧ファイル名 新ファイル 新ファイルの行番号 旧ファイルの行番号` 
+        command_args[1] = replace(command_args[1], replacements);
+        command_args[2] = replace(command_args[2], replacements);
+      } else {
+        throw new Error(` assert-codeblock は ${JSON.stringify(command)} というコマンドをサポートしていません`);
+      }
+      return `${before_command}${command}${after_command}`
+    })
+
+    fs.writeFileSync(filepath, new_content);
+  }
+}
+

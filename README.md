@@ -11,6 +11,10 @@
 
 具体的な使い方は、以下の「マーク方法」と「テスト方法」に書いてある。
 
+**注意：ファイル名にはスペースが入っていないことを前提に全てを組んであります**
+
+また、便利な追加機能として、「リネーム機能」がある。これは、サンプルファイルの名前を変更したくなったときに、関数を一個呼ぶだけで「教材内のコメント行と、サンプルファイル内のコマンド」両方からそのファイル名を検出して置き換えてくれる機能である。
+
 ## マーク方法
 
 基本的に、教材の中の「コードブロックを開始するトリプルバッククオート」の前に、<b>一行空行を挟み</b>、その前にコメント行
@@ -219,6 +223,30 @@ AssertCodeblock.run_all_tests_and_exit([
 ```
 
 一括でテストしてほしいが戻り値が bool で欲しい場合は、代わりに `AssertCodeblock.run_all_tests` を呼ぶこと。
+
+## リネーム機能
+
+こうする。
+
+A → B → C → A といったリネームにも対応している。
+
+```js
+const AssertCodeblock = require('assert-codeblock-dwango-progedu');
+AssertCodeblock.rename_src_files([
+  "textbook-001.md",
+  "textbook-002.md",
+  "textbook-003.md",
+  "textbook-004.md",
+  "textbook-005.md"
+], { src: "./sample_files/" }, [
+  [ "1-1.py", "1-1-hello-world.py" ],
+  [ "1-2.py", "1-2-fizz_buzz.py" ],
+  [ "1-3.py", "1-3-fibonacci.py" ],
+  [ "1-4.py", "1-5.py" ], // こういう
+  [ "1-5.py", "1-6.py" ], // トリッキーな
+  [ "1-6.py", "1-4.py" ], // 入れ替えにも対応
+]);
+```
 
 ## その他
 
