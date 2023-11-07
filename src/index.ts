@@ -4,6 +4,7 @@ import path from 'path';
 
 import { run_command_and_get_result } from "./command";
 import { TestRes } from "./util";
+const Enquirer = require('enquirer');
 
 const REGEX_FOR_DETECTING_COMMAND_AND_CODEBLOCK = /<!--\s*assert[-_]codeblock\s+(.*?)-->[\n\s]*(?<code_fence>`{3,}|~{3,})([\w\d -.]*?)\n([\s\S]*?)\k<code_fence>/gm;
 const REGEX_FOR_DETECTING_COMMAND = /(<!--\s*assert[-_]codeblock\s+)(.*?)(-->)/gm;
@@ -131,11 +132,20 @@ function replace(str: string, replacements: ReadonlyArray<[string, string]>) {
   }
 }
 
-export function rename_src_files(
+export async function rename_src_files(
   textbook_filepath_arr: string[],
   config: { src: string },
   replacements: ReadonlyArray<[string, string]>
 ) {
+  const truly_run = await new Enquirer.Confirm({
+    initial: false,
+    message: `以下のリネームを実施します。本当によろしいですか？\n${replacements.map(([before, after]) => `${before} ==> ${after}`).join("")}`
+  }).run();
+
+  if (!truly_run) {
+    return;
+  }
+
   const get_tmp_dir = () => fs.mkdtempSync(`${os.tmpdir()}${path.sep}`);
   const remove_tmp_dir = (path: string) => fs.rmSync(path, { recursive: true });
 
