@@ -175,7 +175,7 @@ export async function rename_src_files(
       function replace(str: string, replacements: ReadonlyArray<[string, string]>) {
         const candidates = replacements.filter(([before, _after]) => before === str);
         if (candidates.length > 1) {
-          throw new Error(`assert-codeblock: リネームに失敗しました。\n"${str}" の置き換え先候補が複数（${JSON.stringify(candidates)}）ありま`)
+          throw new Error(`assert-codeblock: リネームに失敗しました。\n"${str}" の置き換え先候補が複数（${JSON.stringify(candidates)}）あります`)
         } else if (candidates.length === 0) {
           return str;
         } else {
