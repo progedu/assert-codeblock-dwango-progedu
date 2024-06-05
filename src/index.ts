@@ -12,11 +12,11 @@ const REGEX_FOR_DETECTING_COMMAND = /(<!--\s*assert[-_]codeblock\s+)(.*?)(\s*-->
 export function inspect_codeblock(textbook_filepath: string, config: { src: string }): boolean {
   let all_success = true;
   const results = inspect_codeblock_and_return_message(textbook_filepath, config);
-  for (const { is_success, message, additionally } of results) {
+  for (const { is_success, body, additionally } of results) {
     if (is_success) {
-      console.log(`\x1b[32m${message}\x1b[0m`);
+      console.log(`\x1b[32m${body.message}\x1b[0m`);
     } else {
-      console.log(`\x1b[31m${message}\x1b[0m`);
+      console.log(`\x1b[31m${body.message}\x1b[0m`);
     }
 
     if (additionally) {
@@ -34,7 +34,12 @@ export function inspect_codeblock_and_return_message(textbook_filepath: string, 
   if (!fs.existsSync(textbook_filepath)) {
     return [{
       is_success: false,
-      message: ` INCORRECT TEXTBOOK FILEPATH "${textbook_filepath}"`
+      body: {
+        command_type: "Undefined",
+        result_type: "FileNotFound",
+        message: `INCORRECT TEXTBOOK FILEPATH "${textbook_filepath}"`,
+        textbook_filepath: textbook_filepath
+      }
     }];
   }
   const textbook_content = fs.readFileSync(textbook_filepath, { encoding: "utf-8" }).replace(/\r?\n/g, "\n");
@@ -58,7 +63,14 @@ export function inspect_codeblock_and_return_message(textbook_filepath: string, 
     } else {
       return [{
         is_success: false,
-        message: ` MISMATCH FOUND: コマンド "partial ${remaining_args}" には行番号が ${expected_topnum} から始まると書いてありますが、直前の topnum= には行番号が ${actual_topnum} から始まると書いてあります`
+        body: {
+          command_type: "Partial",
+          result_type: "LineNumMismatch",
+          message: `MISMATCH FOUND: コマンド "partial ${remaining_args}" には行番号が ${expected_topnum} から始まると書いてありますが、直前の topnum= には行番号が ${actual_topnum} から始まると書いてあります`,
+          textbook_filepath: textbook_filepath,
+          expected_topnum,
+          actual_topnum
+        }
       }];
     }
   });
@@ -82,14 +94,14 @@ export function run_all_tests(textbook_filepath_arr: string[], config: { src: st
 
   for (const filepath of textbook_filepath_arr) {
     const results = inspect_codeblock_and_return_message(filepath, config);
-    for (const { is_success, message, additionally } of results) {
+    for (const { is_success, body, additionally } of results) {
       count_all++;
 
       if (is_success) {
         count_success++;
-        console.log(`\x1b[32m${message}\x1b[0m`);
+        console.log(`\x1b[32m${body.message}\x1b[0m`);
       } else {
-        console.log(`\x1b[31m${message}\x1b[0m`);
+        console.log(`\x1b[31m${body.message}\x1b[0m`);
       }
 
       if (additionally) {
