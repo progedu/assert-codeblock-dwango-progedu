@@ -1,3 +1,5 @@
+import path from 'node:path';
+
 import { FILTER, TestRes, WrongFileNameInCommandError, readFileSync, trimEndOnAllLines } from "./util";
 import { structuredPatch } from 'diff';
 import { PatchApplyError, apply_diff, apply_diff_on_lines } from "./apply_diff";
@@ -26,8 +28,8 @@ Please compare the textbook with the content of ${sample_file_path} `
 function handle_diff(textbook_filepath: string, command_args: string[], expected_diff: string, src_folder: string): TestRes {
   const old_sample_file_name = command_args[1];
   const new_sample_file_name = command_args[2];
-  const old_sample_file_path = src_folder + old_sample_file_name;
-  const new_sample_file_path = src_folder + new_sample_file_name;
+  const old_sample_file_path = path.join(src_folder , old_sample_file_name);
+  const new_sample_file_path = path.join(src_folder , new_sample_file_name);
   const code_block_label = command_args.join(" ");
   const oldStr = readFileSync(old_sample_file_path, code_block_label);
   const newStr = readFileSync(new_sample_file_path, code_block_label);
@@ -95,7 +97,7 @@ for example, <!-- assert-codeblock partial 1-1.py 4 --> `,
   }
   const starting_line_num = Number(command_args[2]);
   const sample_file_name = command_args[1];
-  const sample_file_path = src_folder + sample_file_name;
+  const sample_file_path = path.join(src_folder , sample_file_name);
   const sample_file_content = readFileSync(sample_file_path, command_args.join(" ")).replace(/\r?\n/g, "\n");
 
   // 末尾の改行を削って行数を数える
@@ -140,8 +142,8 @@ or <!-- assert-codeblock diff-partial 1-1.py 1-2.py 13 14 -->, in which the old 
   const starting_line_num = Number(command_args[3]) - 1;
   const old_starting_line_num = command_args[4] === undefined ? starting_line_num : Number(command_args[4]) - 1;
 
-  const old_sample_file_path = src_folder + old_sample_file_name;
-  const new_sample_file_path = src_folder + new_sample_file_name;
+  const old_sample_file_path = path.join(src_folder , old_sample_file_name);
+  const new_sample_file_path = path.join(src_folder , new_sample_file_name);
   const code_block_label = command_args.join(" ");
   const oldStr = readFileSync(old_sample_file_path, code_block_label);
   const newStr = readFileSync(new_sample_file_path, code_block_label);
