@@ -28,8 +28,8 @@ Please compare the textbook with the content of ${sample_file_path} `
 function handle_diff(textbook_filepath: string, command_args: string[], expected_diff: string, src_folder: string): TestRes {
   const old_sample_file_name = command_args[1];
   const new_sample_file_name = command_args[2];
-  const old_sample_file_path = path.join(src_folder , old_sample_file_name);
-  const new_sample_file_path = path.join(src_folder , new_sample_file_name);
+  const old_sample_file_path = path.join(src_folder, old_sample_file_name);
+  const new_sample_file_path = path.join(src_folder, new_sample_file_name);
   const code_block_label = command_args.join(" ");
   const oldStr = readFileSync(old_sample_file_path, code_block_label);
   const newStr = readFileSync(new_sample_file_path, code_block_label);
