@@ -6,6 +6,8 @@ import { run_command_and_get_result } from "./command";
 import { TestRes } from "./util";
 const Enquirer = require('enquirer');
 
+export { run_command_and_get_result };
+
 const REGEX_FOR_DETECTING_COMMAND_AND_CODEBLOCK = /<!--\s*assert[-_]codeblock\s+(.*?)-->[\n\s]*(?<code_fence>`{3,}|~{3,})([\w\d -.]*?)\n([\s\S]*?)\k<code_fence>/gm;
 const REGEX_FOR_DETECTING_COMMAND = /(<!--\s*assert[-_]codeblock\s+)(.*?)(\s*-->)/gm;
 
@@ -219,4 +221,3 @@ export async function rename_src_files(
   }
   console.log("\x1b[34m assert-codeblock: ✅教材内の置き換えを完了しました。\x1b[0m");
 }
-
