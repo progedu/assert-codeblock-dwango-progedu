@@ -184,13 +184,17 @@ export async function rename_src_files(
         }
       }
 
-      if (command_args[0] === "exact" || command_args[0] === "partial") {
+      if (["exact", "partial","upd-exact"].includes(command_args[0])) {
         // `assert-codeblock exact ファイル名`
         // `assert-codeblock partial ファイル名 行番号`
+        // `assert-codeblock upd-exact ファイル名`
         command_args[1] = replace(command_args[1], replacements);
-      } else if (command_args[0] === "diff" || command_args[0] === "diff-partial") {
+      } else if (["diff", "diff-partial", "upd-diff","upd-diff-partial","upd-partial"].includes(command_args[0])) {
         // `assert-codeblock diff 旧ファイル 新ファイル`
-        // `assert-codeblock diff-partial 旧ファイル名 新ファイル 行番号` または `assert-codeblock diff-partial 旧ファイル名 新ファイル 新ファイルの行番号 旧ファイルの行番号` 
+        // `assert-codeblock diff-partial 旧ファイル名 新ファイル 行番号` または `assert-codeblock diff-partial 旧ファイル名 新ファイル 新ファイルの行番号 旧ファイルの行番号`
+        // `assert-codeblock upd-diff 旧ファイル 新ファイル`
+        // `assert-codeblock upd-diff-partial 旧ファイル名 新ファイル 行番号`
+        // `assert-codeblock upd-partial 旧ファイル名 新ファイル 行番号`
         command_args[1] = replace(command_args[1], replacements);
         command_args[2] = replace(command_args[2], replacements);
       } else {

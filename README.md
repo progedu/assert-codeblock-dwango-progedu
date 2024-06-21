@@ -194,6 +194,164 @@ def fizz_buzz():
 
 と書く。
 
+### assert-codeblock upd-exact
+
+| 構文 |  `assert-codeblock upd-exact 新ファイル名` |
+|--|--|
+| 役割 | ローカル実行時は、教材に引用されているコードで新ファイルを置き換える。<br>github-action 実行時は exact として動作する|
+
+たとえば、`sample_files/2-1.py` を
+
+```python
+def hello():
+  print("Hello, World!")
+
+hello()
+```
+
+としたいときは、
+
+````markdown
+<!-- assert-codeblock upd-exact 2-1.py -->
+
+```python
+def hello():
+  print("Hello, World!")
+
+hello()
+```
+````
+
+と書く。
+
+なお、upd-exact をローカル実行した場合は、置き換え処理だけが行われ検査は実行されない。
+対して、github-actionsで実行した場合は、exactとして起動するため完全一致を検査し、ファイルの置き換えは実行されない。
+
+### assert-codeblock upd-diff
+
+| 構文 |  `assert-codeblock upd-diff 旧ファイル 新ファイル` |
+|--|--|
+| 役割 | ローカル実行時は、教材に引用されている diff 適用前のコードが旧ファイルと一致するかを検査する。問題なければ新ファイルに diff 適用後のファイルを書き出す。<br>github-action 実行時は diff として動作する |
+
+たとえば、`sample_files/2-1.py` に
+
+```python
+def hello():
+  print("Hello, World!")
+
+hello()
+```
+
+とあるとき、
+
+````markdown
+<!-- assert-codeblock upd-diff 2-1.py 2-2.py -->
+
+```diff-python
+ def hello():
+   print("Hello, World!")
+ 
+-hello()
++for x in range(6):
++  hello()
+```
+````
+
+と書く。
+
+検査が問題なければ、`sample_files/2-2.py` は以下の内容で更新される。
+
+```python
+def hello():
+  print("Hello, World!")
+
+for x in range(6):
+  hello()
+```
+
+なお、github-actions で実行した場合は、diff として起動するため、ファイルの置き換えは実行されない。
+
+### assert-codeblock upd-partial
+
+| 構文 |  `assert-codeblock partial 旧ファイル 新ファイル 行番号` |
+|--|--|
+| 役割 | 教材に引用されているコードを、旧ファイルの n 行目から適用して、新ファイルを書き出す。<br> github-action 実行時は、partial 新ファイル 行番号として起動する|
+
+たとえば、`sample_files/2-2.py` に
+
+```python
+def hello():
+  print("Hello, World!")
+
+for x in range(6):
+  hello()
+```
+
+と書いてあるとき、これの 7 行目から新たにコードを追加したい場合
+
+````markdown
+<!-- assert-codeblock partial 2-2.py 2-3.py 6 -->
+
+```python
+print("Hello")
+```
+````
+
+と書く。
+
+適用できれば、`sample_files/2-3.py` は以下の内容で更新される。
+
+```python
+def hello():
+  print("Hello, World!")
+
+for x in range(6):
+  hello()
+
+print("Hello")
+```
+
+なお、このコマンドは、通常のコードブロックを使って、コード追加する指示をしているときに使うことを想定している。<br>
+コード解説のような、更新を指示しないものについては、partial や exact を利用する。
+
+他のコマンド同様に、github-actions で実行した場合は、partial として起動するため、ファイルの置き換えは実行されない。
+
+### assert-codeblock upd-diff-partial
+
+| 構文 |  `assert-codeblock upd-diff-partial 旧ファイル名 新ファイル 行番号` |
+|--|--|
+| 役割 | ローカル実行時は、教材に n 行目から抜粋されている diff 適用前のコードが旧ファイルと一致するかを検査する。問題なければ新ファイルに diff 適用後のファイルを書き出す。<br>github-action 実行時は diff-partial として動作する |
+
+たとえば、`sample_files/2-3.py` に
+
+```python
+def hello():
+  print("Hello, World!")
+
+for x in range(6):
+  hello()
+
+print("Hello")
+```
+
+とあり、2行目から引用して、差分更新をしたい場合
+
+````markdown
+<!-- assert-codeblock diff 2-3.py 2-4.py 2 -->
+
+```diff-python
+   print("Hello, World!")
+
+-for x in range(6):
++for x in range(5):
+   hello()
+```
+
+````
+
+と書く。
+
+なお、github-actions で実行した場合は、diff-partial として起動するため、ファイルの置き換えは実行されない。
 
 ## テスト方法
 
