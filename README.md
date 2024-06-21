@@ -290,7 +290,7 @@ for x in range(6):
 と書いてあるとき、これの 7 行目から新たにコードを追加したい場合
 
 ````markdown
-<!-- assert-codeblock partial 2-2.py 2-3.py 6 -->
+<!-- assert-codeblock upd-partial 2-2.py 2-3.py 6 -->
 
 ```python
 print("Hello")
@@ -337,7 +337,7 @@ print("Hello")
 とあり、2行目から引用して、差分更新をしたい場合
 
 ````markdown
-<!-- assert-codeblock diff 2-3.py 2-4.py 2 -->
+<!-- assert-codeblock upd-diff-partial 2-3.py 2-4.py 2 -->
 
 ```diff-python
    print("Hello, World!")
