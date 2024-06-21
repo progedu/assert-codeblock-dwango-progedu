@@ -334,8 +334,6 @@ for example, <!-- assert-codeblock partial 1-1.py 1-2.py 4 --> `,
   const old_content_trimend = old_content.trimEnd();
   const old_content_last_line_num = old_content_trimend.split("\n").length;
 
-  console.log("old_content_last_line_num " + JSON.stringify(old_content_last_line_num));
-
   // 旧ファイルの行数とコードブロックの行番号が被っている場合、エラーを吐く
   if (starting_line_num <= old_content_last_line_num) {
     return {
