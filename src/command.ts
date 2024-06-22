@@ -494,8 +494,10 @@ export function run_command_and_get_result(textbook_filepath: string, command: s
         return handle_upd_diff(textbook_filepath, command_args, matched_file_content, config.src);
       }
     } else if (command_args[0] === "upd-partial") {
+
       if (process.env.GITHUB_ACTIONS) {
-        return handle_partial(textbook_filepath, command_args.splice(1,1), matched_file_content, config.src);
+        command_args.splice(1, 1);
+        return handle_partial(textbook_filepath, command_args, matched_file_content, config.src);
       } else {
         return handle_upd_partial(textbook_filepath, command_args, matched_file_content, config.src);
       }
