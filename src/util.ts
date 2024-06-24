@@ -15,7 +15,7 @@ Cannot find a file "${file_name}" mentioned in the code block labeled "${code_bl
 }
 
 export type CommandType = "Exact" | "Diff" | "Partial" | "DiffPartial" | "Undefined";
-export type ResultType = "Success" | "Mismatch" | "FileNotFound" | "WrongFileNameInCommand" | "LineNumMismatch" | "LineNumMissing" | "UnknownCommand" | "UnknownError";
+export type ResultType = "Success" | "Mismatch" | "TextbookNotFound" | "WrongFileNameInCommand" | "LineNumMismatch" | "LineNumMissing" | "UnknownCommand" | "UnknownError";
 
 export type ResBody = {
   command_type: CommandType,
