@@ -38,9 +38,10 @@ export function inspect_codeblock_and_return_message(textbook_filepath: string, 
       is_success: false,
       body: {
         command_type: "Undefined",
-        result_type: "FileNotFound",
+        result_type: "TextbookNotFound",
         message: `INCORRECT TEXTBOOK FILEPATH "${textbook_filepath}"`,
-        textbook_filepath: textbook_filepath
+        textbook_filepath: textbook_filepath,
+        codeblock_matched_index: -1
       }
     }];
   }
@@ -70,6 +71,8 @@ export function inspect_codeblock_and_return_message(textbook_filepath: string, 
           result_type: "LineNumMismatch",
           message: `MISMATCH FOUND: コマンド "partial ${remaining_args}" には行番号が ${expected_topnum} から始まると書いてありますが、直前の topnum= には行番号が ${actual_topnum} から始まると書いてあります`,
           textbook_filepath: textbook_filepath,
+          codeblock_matched_index: a.index,
+          codeblock_label: "partial " + remaining_args,
           expected_topnum,
           actual_topnum
         }
@@ -80,13 +83,15 @@ export function inspect_codeblock_and_return_message(textbook_filepath: string, 
   return [
     ...inconsistent_topnum_msg,
     ...(() => {
-      const match = [...textbook_content.matchAll(REGEX_FOR_DETECTING_COMMAND_AND_CODEBLOCK)];
-      if (!match.length) return [];
+      const matches = [...textbook_content.matchAll(REGEX_FOR_DETECTING_COMMAND_AND_CODEBLOCK)];
+      if (!matches.length) return [];
 
       console.log(`\n\x1b[34m assert-codeblock: ${textbook_filepath} をチェック中\x1b[0m`);
-      return match.map(([_, command, code_fence, file_type, matched_file_content]) =>
-        run_command_and_get_result(textbook_filepath, command, matched_file_content, config)
-      );
+      return matches.map((match) => {
+        const [_, command, code_fence, file_type, matched_file_content] = match;
+        const index = match.index;
+        return run_command_and_get_result(textbook_filepath, command, matched_file_content, config, index);
+      });
     })()];
 }
 

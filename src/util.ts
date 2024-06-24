@@ -22,6 +22,7 @@ export type ResBody = {
   result_type: ResultType,
   message: string,
   textbook_filepath: string,
+  codeblock_matched_index: number,
   message_except_content?:string,
   codeblock_label?: string,
   textbook_content?: string,

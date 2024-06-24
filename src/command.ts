@@ -2,7 +2,7 @@ import { FILTER, TestRes, WrongFileNameInCommandError, readFileSync, trimEndOnAl
 import { structuredPatch } from 'diff';
 import { PatchApplyError, apply_diff, apply_diff_on_lines } from "./apply_diff";
 
-function handle_exact(textbook_filepath: string, command_args: string[], matched_file_content: string, src_folder: string): TestRes {
+function handle_exact(textbook_filepath: string, command_args: string[], matched_file_content: string, src_folder: string, matched_label_index: number): TestRes {
   const sample_file_name = command_args[1];
   const sample_file_path = src_folder + sample_file_name;
   const sample_file_content = readFileSync(sample_file_path, command_args.join(" ")).replace(/\r?\n/g, "\n");
@@ -17,6 +17,7 @@ in ${textbook_filepath}
 with the code block labeled ${sample_file_name}
 Please compare the textbook with the content of ${sample_file_path} `,
         textbook_filepath: textbook_filepath,
+        codeblock_matched_index: matched_label_index,
         codeblock_label: command_args.join(" "),
         textbook_content: matched_file_content,
         sample_content: sample_file_content,
@@ -30,13 +31,14 @@ Please compare the textbook with the content of ${sample_file_path} `,
         result_type: "Success",
         message: ` OK: "${textbook_filepath}" のコードブロック "exact ${sample_file_name}" は "${sample_file_path}" と一致しています`,
         textbook_filepath: textbook_filepath,
+        codeblock_matched_index: matched_label_index,
         codeblock_label: command_args.join(" "),
       }
     };
   }
 }
 
-function handle_diff(textbook_filepath: string, command_args: string[], expected_diff: string, src_folder: string): TestRes {
+function handle_diff(textbook_filepath: string, command_args: string[], expected_diff: string, src_folder: string, matched_label_index: number): TestRes {
   const old_sample_file_name = command_args[1];
   const new_sample_file_name = command_args[2];
   const old_sample_file_path = src_folder + old_sample_file_name;
@@ -69,6 +71,7 @@ function handle_diff(textbook_filepath: string, command_args: string[], expected
           result_type: "Success",
           message: ` OK: "${textbook_filepath}" のコードブロック "diff ${old_sample_file_name} ${new_sample_file_name}" を "${old_sample_file_path}" に適用すると "${new_sample_file_path}" と一致しています`,
           textbook_filepath: textbook_filepath,
+          codeblock_matched_index: matched_label_index,
         }
       };
     } else if (trimEndOnAllLines(expected_diff) === trimEndOnAllLines(actual_diff)) {
@@ -80,6 +83,7 @@ function handle_diff(textbook_filepath: string, command_args: string[], expected
           result_type: "Success",
           message: ` OK: "${textbook_filepath}" のコードブロック "diff ${old_sample_file_name} ${new_sample_file_name}" は "${old_sample_file_path}" と "${new_sample_file_path}" の diff と一致しています`,
           textbook_filepath: textbook_filepath,
+          codeblock_matched_index: matched_label_index,
         }
       };
     } else {
@@ -94,6 +98,7 @@ with the code block labeled "diff ${old_sample_file_name} ${new_sample_file_name
 The diff of ${old_sample_file_path} with ${new_sample_file_path} is as follows: \n\`\`\`\n${actual_diff}\`\`\`
 But the content in the textbook is as follows: \n\`\`\`\n${expected_diff}\`\`\` `,
           textbook_filepath: textbook_filepath,
+          codeblock_matched_index: matched_label_index,
           codeblock_label: code_block_label,
           textbook_content: expected_diff,
           sample_content: actual_diff,
@@ -118,6 +123,7 @@ But the content in the textbook is as follows: \n\`\`\`\n${expected_diff}\`\`\` 
 in ${textbook_filepath}
 with the code block labeled "diff ${old_sample_file_name} ${new_sample_file_name}"`,
           textbook_filepath: textbook_filepath,
+          codeblock_matched_index: matched_label_index,
           codeblock_label: code_block_label,
           textbook_content: expected_diff,
           sample_content: actual_diff,
@@ -127,7 +133,7 @@ with the code block labeled "diff ${old_sample_file_name} ${new_sample_file_name
   }
 }
 
-function handle_partial(textbook_filepath: string, command_args: string[], matched_file_content: string, src_folder: string): TestRes {
+function handle_partial(textbook_filepath: string, command_args: string[], matched_file_content: string, src_folder: string, matched_label_index: number): TestRes {
   if (command_args[2] === undefined) {
     return {
       is_success: false,
@@ -140,6 +146,8 @@ with the code block labeled "${command_args.join(" ")}"\
 Note that 'assert-codeblock partial' requires a file name AND its line number:
 for example, <!-- assert-codeblock partial 1-1.py 4 --> `,
         textbook_filepath: textbook_filepath,
+        codeblock_matched_index: matched_label_index,
+        codeblock_label: command_args.join(" "),
       }
     }
   }
@@ -167,6 +175,7 @@ in ${textbook_filepath}
 with the code block labeled "partial ${sample_file_name} ${starting_line_num}"
 Please compare the textbook with the content of ${sample_file_path} `,
         textbook_filepath: textbook_filepath,
+        codeblock_matched_index: matched_label_index,
         codeblock_label: command_args.join(" "),
         textbook_content: matched_file_content,
         sample_content: partial_content,
@@ -181,13 +190,14 @@ Please compare the textbook with the content of ${sample_file_path} `,
         result_type: "Success",
         message: ` OK: "${textbook_filepath}" のコードブロック "partial ${sample_file_name} ${starting_line_num}" は "${sample_file_path}" の ${starting_line_num} 行目からの ${行数} 行と一致しています`,
         textbook_filepath: textbook_filepath,
+        codeblock_matched_index: matched_label_index,
         codeblock_label: command_args.join(" "),
       }
     };
   }
 }
 
-function handle_diff_partial(textbook_filepath: string, command_args: string[], expected_diff: string, src_folder: string): TestRes {
+function handle_diff_partial(textbook_filepath: string, command_args: string[], expected_diff: string, src_folder: string, matched_label_index:number): TestRes {
   const old_sample_file_name = command_args[1];
   const new_sample_file_name = command_args[2];
   if (command_args[3] === undefined) {
@@ -203,6 +213,7 @@ Note that 'assert-codeblock diff-partial' requires two file names AND one or two
 for example, <!-- assert-codeblock diff-partial 1-1.py 1-2.py 13 -->, in which the old and the new line numbers both start at 13,
 or <!-- assert-codeblock diff-partial 1-1.py 1-2.py 13 14 -->, in which the old line number starts at 13 but the new one starts at 14.`,
         textbook_filepath: textbook_filepath,
+        codeblock_matched_index: matched_label_index,
         codeblock_label: command_args.join(" "),
       },
     }
@@ -243,6 +254,7 @@ or <!-- assert-codeblock diff-partial 1-1.py 1-2.py 13 14 -->, in which the old 
           result_type: "Success",
           message: ` OK: "${textbook_filepath}" のコードブロック "${command_args.join(" ")}" を "${old_sample_file_path}" の ${old_starting_line_num + 1} 行目からに適用すると "${new_sample_file_path}" の ${starting_line_num + 1} 行目からと一致しています`,
           textbook_filepath: textbook_filepath,
+          codeblock_matched_index: matched_label_index,
         }
       };
     } else {
@@ -278,6 +290,7 @@ which does not start with \`expected_newStr_lines.join("\n")\`, which is
 ${expected_newStr_lines.join("\n")}\`\`\`
 **************************************`,
           textbook_filepath: textbook_filepath,
+          codeblock_matched_index: matched_label_index,
           codeblock_label: code_block_label,
           textbook_content: expected_diff,
           sample_content: entire_diff,
@@ -302,6 +315,7 @@ The content in the textbook, intended to be the partial diff, is as follows: \n\
 in ${textbook_filepath}
 with the code block labeled "${command_args.join(" ")}"`,
           textbook_filepath: textbook_filepath,
+          codeblock_matched_index: matched_label_index,
           codeblock_label: code_block_label,
           textbook_content: expected_diff,
           sample_content: entire_diff,
@@ -314,17 +328,17 @@ with the code block labeled "${command_args.join(" ")}"`,
 
 
 
-export function run_command_and_get_result(textbook_filepath: string, command: string, matched_file_content: string, config: { src: string }): TestRes {
+export function run_command_and_get_result(textbook_filepath: string, command: string, matched_file_content: string, config: { src: string }, index:number=-1): TestRes {
   try {
     const command_args = command.trim().split(/\s+/);
     if (command_args[0] === "exact") {
-      return handle_exact(textbook_filepath, command_args, matched_file_content, config.src);
+      return handle_exact(textbook_filepath, command_args, matched_file_content, config.src, index);
     } else if (command_args[0] === "diff") {
-      return handle_diff(textbook_filepath, command_args, matched_file_content, config.src);
+      return handle_diff(textbook_filepath, command_args, matched_file_content, config.src, index);
     } else if (command_args[0] === "partial") {
-      return handle_partial(textbook_filepath, command_args, matched_file_content, config.src);
+      return handle_partial(textbook_filepath, command_args, matched_file_content, config.src, index);
     } else if (command_args[0] === "diff-partial") {
-      return handle_diff_partial(textbook_filepath, command_args, matched_file_content, config.src);
+      return handle_diff_partial(textbook_filepath, command_args, matched_file_content, config.src, index);
     } else {
       return {
         is_success: false,
@@ -333,6 +347,7 @@ export function run_command_and_get_result(textbook_filepath: string, command: s
           result_type: "UnknownCommand",
           message: ` assert-codeblock は ${JSON.stringify(command)} というコマンドをサポートしていません`,
           textbook_filepath: textbook_filepath,
+          codeblock_matched_index: index,
           codeblock_label: command,
         }
       };
@@ -346,6 +361,7 @@ export function run_command_and_get_result(textbook_filepath: string, command: s
           result_type: "WrongFileNameInCommand",
           message: e.message,
           textbook_filepath: textbook_filepath,
+          codeblock_matched_index: index,
           codeblock_label: command,
         }
       };
