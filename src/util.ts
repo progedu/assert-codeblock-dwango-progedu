@@ -16,6 +16,11 @@ Cannot find a file "${file_name}" mentioned in the code block labeled "${code_bl
 
 export type TestRes = { is_success: Boolean, message: string, additionally?: unknown };
 
+export type Config = {
+  src: string;
+  is_quiet?: boolean;
+};
+
 export function trimEndOnAllLines(str: string) {
   return str.split("\n").map(line => line.trimEnd()).join("\n");
 }

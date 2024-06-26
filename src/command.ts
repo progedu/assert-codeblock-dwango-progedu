@@ -1,4 +1,4 @@
-import { FILTER, TestRes, WrongFileNameInCommandError, readFileSync, trimEndOnAllLines } from "./util";
+import { Config, FILTER, TestRes, WrongFileNameInCommandError, readFileSync, trimEndOnAllLines } from "./util";
 import { structuredPatch } from 'diff';
 import { PatchApplyError, apply_diff, apply_diff_on_lines } from "./apply_diff";
 
@@ -205,7 +205,7 @@ The content in the textbook, intended to be the partial diff, is as follows: \n\
 
 
 
-export function run_command_and_get_result(textbook_filepath: string, command: string, matched_file_content: string, config: { src: string }): TestRes {
+export function run_command_and_get_result(textbook_filepath: string, command: string, matched_file_content: string, config: Config): TestRes {
   try {
     const command_args = command.trim().split(/\s+/);
     if (command_args[0] === "exact") {
