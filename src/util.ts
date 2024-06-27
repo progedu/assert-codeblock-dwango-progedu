@@ -14,7 +14,24 @@ Cannot find a file "${file_name}" mentioned in the code block labeled "${code_bl
   return fs.readFileSync(file_name, { encoding: "utf-8" });
 }
 
-export type TestRes = { is_success: Boolean, message: string, additionally?: unknown };
+export type CommandType = "Exact" | "Diff" | "Partial" | "DiffPartial" | "Undefined";
+export type ResultType = "Success" | "Mismatch" | "TextbookNotFound" | "WrongFileNameInCommand" | "LineNumMismatch" | "LineNumMissing" | "UnknownCommand" | "UnknownError";
+
+export type ResBody = {
+  command_type: CommandType,
+  result_type: ResultType,
+  message: string,
+  textbook_filepath: string,
+  codeblock_matched_index: number,
+  message_except_content?:string,
+  codeblock_label?: string,
+  textbook_content?: string,
+  sample_content?: string,
+  textbook_topnum?: string,
+  sample_topnum?: string,
+}
+
+export type TestRes = { is_success: Boolean, body: ResBody, additionally?: unknown };
 
 export type Config = {
   src: string;
