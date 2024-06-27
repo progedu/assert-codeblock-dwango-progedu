@@ -33,6 +33,11 @@ export type ResBody = {
 
 export type TestRes = { is_success: Boolean, body: ResBody, additionally?: unknown };
 
+export type Config = {
+  src: string;
+  is_quiet?: boolean;
+};
+
 export function trimEndOnAllLines(str: string) {
   return str.split("\n").map(line => line.trimEnd()).join("\n");
 }

@@ -3,7 +3,7 @@ import os from 'os';
 import path from 'path';
 
 import { run_command_and_get_result } from "./command";
-import { TestRes } from "./util";
+import { TestRes, Config } from "./util";
 const Enquirer = require('enquirer');
 
 export { run_command_and_get_result };
@@ -11,7 +11,7 @@ export { run_command_and_get_result };
 const REGEX_FOR_DETECTING_COMMAND_AND_CODEBLOCK = /<!--\s*assert[-_]codeblock\s+(.*?)-->[\n\s]*(?<code_fence>`{3,}|~{3,})([\w\d -.]*?)\n([\s\S]*?)\k<code_fence>/gm;
 const REGEX_FOR_DETECTING_COMMAND = /(<!--\s*assert[-_]codeblock\s+)(.*?)(\s*-->)/gm;
 
-export function inspect_codeblock(textbook_filepath: string, config: { src: string }): boolean {
+export function inspect_codeblock(textbook_filepath: string, config: Config): boolean {
   let all_success = true;
   const results = inspect_codeblock_and_return_message(textbook_filepath, config);
   for (const { is_success, body, additionally } of results) {
@@ -32,7 +32,7 @@ export function inspect_codeblock(textbook_filepath: string, config: { src: stri
   return all_success;
 }
 
-export function inspect_codeblock_and_return_message(textbook_filepath: string, config: { src: string }): TestRes[] {
+export function inspect_codeblock_and_return_message(textbook_filepath: string, config: Config): TestRes[] {
   if (!fs.existsSync(textbook_filepath)) {
     return [{
       is_success: false,
@@ -86,7 +86,9 @@ export function inspect_codeblock_and_return_message(textbook_filepath: string, 
       const matches = [...textbook_content.matchAll(REGEX_FOR_DETECTING_COMMAND_AND_CODEBLOCK)];
       if (!matches.length) return [];
 
-      console.log(`\n\x1b[34m assert-codeblock: ${textbook_filepath} をチェック中\x1b[0m`);
+      if (!config.is_quiet) {
+        console.log(`\n\x1b[34m assert-codeblock: ${textbook_filepath} をチェック中\x1b[0m`);
+      }
       return matches.map((match) => {
         const [_, command, code_fence, file_type, matched_file_content] = match;
         const index = match.index;
@@ -95,7 +97,7 @@ export function inspect_codeblock_and_return_message(textbook_filepath: string, 
     })()];
 }
 
-export function run_all_tests(textbook_filepath_arr: string[], config: { src: string }) {
+export function run_all_tests(textbook_filepath_arr: string[], config: Config) {
   let count_all = 0;
   let count_success = 0;
 
@@ -132,7 +134,7 @@ export function run_all_tests(textbook_filepath_arr: string[], config: { src: st
   }
 }
 
-export function run_all_tests_and_exit(textbook_filepath_arr: string[], config: { src: string }) {
+export function run_all_tests_and_exit(textbook_filepath_arr: string[], config: Config) {
   if (run_all_tests(textbook_filepath_arr, config)) {
     process.exit(0);
   } else {
@@ -142,7 +144,7 @@ export function run_all_tests_and_exit(textbook_filepath_arr: string[], config: 
 
 export async function rename_src_files(
   textbook_filepath_arr: string[],
-  config: { src: string },
+  config: Config,
   replacements: ReadonlyArray<[string, string]>
 ) {
   const truly_run = await new Enquirer.Confirm({

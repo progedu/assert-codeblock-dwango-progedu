@@ -1,6 +1,6 @@
 import path from 'node:path';
 
-import { FILTER, TestRes, WrongFileNameInCommandError, readFileSync, trimEndOnAllLines } from "./util";
+import { Config, FILTER, TestRes, WrongFileNameInCommandError, readFileSync, trimEndOnAllLines } from "./util";
 import { structuredPatch } from 'diff';
 import { PatchApplyError, apply_diff, apply_diff_on_lines } from "./apply_diff";
 
@@ -330,7 +330,7 @@ with the code block labeled "${command_args.join(" ")}"`,
 
 
 
-export function run_command_and_get_result(textbook_filepath: string, command: string, matched_file_content: string, config: { src: string }, index:number=-1): TestRes {
+export function run_command_and_get_result(textbook_filepath: string, command: string, matched_file_content: string, config: Config, index:number=-1): TestRes {
   try {
     const command_args = command.trim().split(/\s+/);
     if (command_args[0] === "exact") {
