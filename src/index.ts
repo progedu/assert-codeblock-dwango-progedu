@@ -41,7 +41,7 @@ export function inspect_codeblock_and_return_message(textbook_filepath: string, 
         result_type: "TextbookNotFound",
         message: `INCORRECT TEXTBOOK FILEPATH "${textbook_filepath}"`,
         textbook_filepath: textbook_filepath,
-        codeblock_matched_index: -1
+        codeblock_line_num: -1
       }
     }];
   }
@@ -49,6 +49,8 @@ export function inspect_codeblock_and_return_message(textbook_filepath: string, 
 
   /* partial に書いてある先頭行番号が 直前の topnum= に書いてある行番号と異なっていたら怒る */
   const whether_consistent_with_topnum = [...textbook_content.matchAll(/topnum\s*=\s*(?<topnum>"\d+"|'\d+'|\d+)[^>]*>[\n\s]*<!--\s*assert[-_]codeblock\s+partial\s+(?<remaining_args>.*?)-->/gm)];
+
+  const lf_arr = [...textbook_content.matchAll(/\n/g)].map((x) => x.index);
 
   // 怒りを蓄えるための配列
   const inconsistent_topnum_msg: TestRes[] = whether_consistent_with_topnum.flatMap(a => {
@@ -61,6 +63,9 @@ export function inspect_codeblock_and_return_message(textbook_filepath: string, 
     // 一方で、topnum は '45', '"45"', "'45'" のどれの可能性もあるのが厄介。めんどいので replace でごり押し
     const actual_topnum = topnum.replaceAll(/['"]/g, "");
 
+    // インデックスを元に行番号に当たる位置を特定
+    const line_num = lf_arr.findIndex((x) => x >= a.index) + 1;
+
     if (expected_topnum === actual_topnum) {
       return [];
     } else {
@@ -71,7 +76,7 @@ export function inspect_codeblock_and_return_message(textbook_filepath: string, 
           result_type: "LineNumMismatch",
           message: `MISMATCH FOUND: コマンド "partial ${remaining_args}" には行番号が ${expected_topnum} から始まると書いてありますが、直前の topnum= には行番号が ${actual_topnum} から始まると書いてあります`,
           textbook_filepath: textbook_filepath,
-          codeblock_matched_index: a.index,
+          codeblock_line_num: line_num,
           codeblock_label: "partial " + remaining_args,
           expected_topnum,
           actual_topnum
@@ -91,8 +96,9 @@ export function inspect_codeblock_and_return_message(textbook_filepath: string, 
       }
       return matches.map((match) => {
         const [_, command, code_fence, file_type, matched_file_content] = match;
-        const index = match.index;
-        return run_command_and_get_result(textbook_filepath, command, matched_file_content, config, index);
+        // インデックスを元に行番号に当たる位置を特定
+        const line_num = lf_arr.findIndex((x) => x >= match.index) + 1;
+        return run_command_and_get_result(textbook_filepath, command, matched_file_content, config, line_num);
       });
     })()];
 }
