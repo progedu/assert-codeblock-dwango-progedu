@@ -397,7 +397,7 @@ for example, <!-- assert-codeblock upd-diff-partial 1-1.py 1-2.py 13 -->, in whi
   const new_sample_file_path = src_folder + new_sample_file_name;
 
   const old_diff_str = diff_content.split("\n").filter((line) => !(line[0] === "+")).map((line, i) => (line.slice(1))).join("\n");
-  const old_diff_str_line_count = old_diff_str.trimEnd().split("\n").length;
+  const old_diff_str_line_count = old_diff_str.split("\n").length - 1;
 
   const old_content = readFileSync(old_sample_file_path, code_block_label).replace(/\r?\n/g, "\n");
   const old_str_front = old_content.split("\n").filter((line, i) => (i < starting_line_num)).map((line, i) => (line + "\n")).join("");
