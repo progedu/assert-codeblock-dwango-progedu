@@ -7,7 +7,7 @@ import { PatchApplyError, apply_diff, apply_diff_on_lines } from "./apply_diff";
 function handle_exact(textbook_filepath: string, command_args: string[], matched_file_content: string, src_folder: string, matched_label_line_num: number): TestRes {
   const sample_file_name = command_args[1];
   const sample_file_path = src_folder + sample_file_name;
-  const sample_file_content = readFileSync(sample_file_path, command_args.join(" ")).replace(/\r?\n/g, "\n");
+  const sample_file_content = readFileSync(sample_file_path, command_args.join(" "), matched_label_line_num).replace(/\r?\n/g, "\n");
   if (matched_file_content !== sample_file_content) {
     return {
       is_success: false,
@@ -15,7 +15,7 @@ function handle_exact(textbook_filepath: string, command_args: string[], matched
         command_type: "Exact",
         result_type: "Mismatch",
         message: ` MISMATCH FOUND
-in ${textbook_filepath}
+in ${textbook_filepath}:${matched_label_line_num}
 with the code block labeled ${sample_file_name}
 Please compare the textbook with the content of ${sample_file_path} `,
         textbook_filepath: textbook_filepath,
@@ -31,7 +31,7 @@ Please compare the textbook with the content of ${sample_file_path} `,
       body: {
         command_type: "Exact",
         result_type: "Success",
-        message: ` OK: "${textbook_filepath}" のコードブロック "exact ${sample_file_name}" は "${sample_file_path}" と一致しています`,
+        message: ` OK: "${textbook_filepath}:${matched_label_line_num}" のコードブロック "exact ${sample_file_name}" は "${sample_file_path}" と一致しています`,
         textbook_filepath: textbook_filepath,
         codeblock_line_num: matched_label_line_num,
         codeblock_label: command_args.join(" "),
@@ -46,8 +46,8 @@ function handle_diff(textbook_filepath: string, command_args: string[], expected
   const old_sample_file_path = path.join(src_folder, old_sample_file_name);
   const new_sample_file_path = path.join(src_folder, new_sample_file_name);
   const code_block_label = command_args.join(" ");
-  const oldStr = readFileSync(old_sample_file_path, code_block_label);
-  const newStr = readFileSync(new_sample_file_path, code_block_label);
+  const oldStr = readFileSync(old_sample_file_path, code_block_label, matched_label_line_num);
+  const newStr = readFileSync(new_sample_file_path, code_block_label, matched_label_line_num);
   const actual_diff = (() => {
     const diff = structuredPatch(old_sample_file_path, new_sample_file_path, oldStr, newStr, "", "", { context: 1e6 });
     const ret: string[] = [];
@@ -71,7 +71,7 @@ function handle_diff(textbook_filepath: string, command_args: string[], expected
         body: {
           command_type: "Diff",
           result_type: "Success",
-          message: ` OK: "${textbook_filepath}" のコードブロック "diff ${old_sample_file_name} ${new_sample_file_name}" を "${old_sample_file_path}" に適用すると "${new_sample_file_path}" と一致しています`,
+          message: ` OK: "${textbook_filepath}:${matched_label_line_num}" のコードブロック "diff ${old_sample_file_name} ${new_sample_file_name}" を "${old_sample_file_path}" に適用すると "${new_sample_file_path}" と一致しています`,
           textbook_filepath: textbook_filepath,
           codeblock_line_num: matched_label_line_num,
         }
@@ -83,7 +83,7 @@ function handle_diff(textbook_filepath: string, command_args: string[], expected
         body: {
           command_type: "Diff",
           result_type: "Success",
-          message: ` OK: "${textbook_filepath}" のコードブロック "diff ${old_sample_file_name} ${new_sample_file_name}" は "${old_sample_file_path}" と "${new_sample_file_path}" の diff と一致しています`,
+          message: ` OK: "${textbook_filepath}:${matched_label_line_num}" のコードブロック "diff ${old_sample_file_name} ${new_sample_file_name}" は "${old_sample_file_path}" と "${new_sample_file_path}" の diff と一致しています`,
           textbook_filepath: textbook_filepath,
           codeblock_line_num: matched_label_line_num,
         }
@@ -95,7 +95,7 @@ function handle_diff(textbook_filepath: string, command_args: string[], expected
           command_type: "Diff",
           result_type: "Mismatch",
           message: ` MISMATCH FOUND
-in ${textbook_filepath}
+in ${textbook_filepath}:${matched_label_line_num}
 with the code block labeled "diff ${old_sample_file_name} ${new_sample_file_name}"
 The diff of ${old_sample_file_path} with ${new_sample_file_path} is as follows: \n\`\`\`\n${actual_diff}\`\`\`
 But the content in the textbook is as follows: \n\`\`\`\n${expected_diff}\`\`\` `,
@@ -116,13 +116,13 @@ But the content in the textbook is as follows: \n\`\`\`\n${expected_diff}\`\`\` 
           result_type: "Mismatch",// CANNOT APPLY THE PATCH 用の方が欲しい
           message: `  CANNOT APPLY THE PATCH
 [original message: \`${e.message}\`]
-in ${textbook_filepath}
+in ${textbook_filepath}:${matched_label_line_num}
 with the code block labeled "diff ${old_sample_file_name} ${new_sample_file_name}"
 The diff of ${old_sample_file_path} with ${new_sample_file_path} is as follows: \n\`\`\`\n${actual_diff}\`\`\`
 But the content in the textbook is as follows: \n\`\`\`\n${expected_diff}\`\`\` `,
           message_except_content: `  CANNOT APPLY THE PATCH
 [original message: \`${e.message}\`]
-in ${textbook_filepath}
+in ${textbook_filepath}:${matched_label_line_num}
 with the code block labeled "diff ${old_sample_file_name} ${new_sample_file_name}"`,
           textbook_filepath: textbook_filepath,
           codeblock_line_num: matched_label_line_num,
@@ -143,7 +143,7 @@ function handle_partial(textbook_filepath: string, command_args: string[], match
         command_type: "Partial",
         result_type: "LineNumMissing",
         message: ` INSUFFICIENT ARGUMENT: LINE NUMBER MISSING
-in ${textbook_filepath}
+in ${textbook_filepath}:${matched_label_line_num}
 with the code block labeled "${command_args.join(" ")}"\
 Note that 'assert-codeblock partial' requires a file name AND its line number:
 for example, <!-- assert-codeblock partial 1-1.py 4 --> `,
@@ -156,7 +156,7 @@ for example, <!-- assert-codeblock partial 1-1.py 4 --> `,
   const starting_line_num = Number(command_args[2]);
   const sample_file_name = command_args[1];
   const sample_file_path = path.join(src_folder , sample_file_name);
-  const sample_file_content = readFileSync(sample_file_path, command_args.join(" ")).replace(/\r?\n/g, "\n");
+  const sample_file_content = readFileSync(sample_file_path, command_args.join(" "), matched_label_line_num).replace(/\r?\n/g, "\n");
 
   // 末尾の改行を削って行数を数える
   const 行数 = matched_file_content.trimEnd().split("\n").length;
@@ -173,7 +173,7 @@ for example, <!-- assert-codeblock partial 1-1.py 4 --> `,
         command_type: "Partial",
         result_type: "Mismatch",
         message: ` MISMATCH FOUND
-in ${textbook_filepath}
+in ${textbook_filepath}:${matched_label_line_num}
 with the code block labeled "partial ${sample_file_name} ${starting_line_num}"
 Please compare the textbook with the content of ${sample_file_path} `,
         textbook_filepath: textbook_filepath,
@@ -190,7 +190,7 @@ Please compare the textbook with the content of ${sample_file_path} `,
       body: {
         command_type: "Partial",
         result_type: "Success",
-        message: ` OK: "${textbook_filepath}" のコードブロック "partial ${sample_file_name} ${starting_line_num}" は "${sample_file_path}" の ${starting_line_num} 行目からの ${行数} 行と一致しています`,
+        message: ` OK: "${textbook_filepath}:${matched_label_line_num}" のコードブロック "partial ${sample_file_name} ${starting_line_num}" は "${sample_file_path}" の ${starting_line_num} 行目からの ${行数} 行と一致しています`,
         textbook_filepath: textbook_filepath,
         codeblock_line_num: matched_label_line_num,
         codeblock_label: command_args.join(" "),
@@ -209,7 +209,7 @@ function handle_diff_partial(textbook_filepath: string, command_args: string[], 
         command_type: "DiffPartial",
         result_type: "LineNumMissing",
         message: ` INSUFFICIENT ARGUMENT: LINE NUMBER MISSING
-in ${textbook_filepath}
+in ${textbook_filepath}:${matched_label_line_num}
 with the code block labeled "${command_args.join(" ")}"
 Note that 'assert-codeblock diff-partial' requires two file names AND one or two line number at which the diff starts:
 for example, <!-- assert-codeblock diff-partial 1-1.py 1-2.py 13 -->, in which the old and the new line numbers both start at 13,
@@ -226,8 +226,8 @@ or <!-- assert-codeblock diff-partial 1-1.py 1-2.py 13 14 -->, in which the old 
   const old_sample_file_path = path.join(src_folder , old_sample_file_name);
   const new_sample_file_path = path.join(src_folder , new_sample_file_name);
   const code_block_label = command_args.join(" ");
-  const oldStr = readFileSync(old_sample_file_path, code_block_label);
-  const newStr = readFileSync(new_sample_file_path, code_block_label);
+  const oldStr = readFileSync(old_sample_file_path, code_block_label, matched_label_line_num);
+  const newStr = readFileSync(new_sample_file_path, code_block_label, matched_label_line_num);
   const entire_diff = (() => {
     const diff = structuredPatch(old_sample_file_path, new_sample_file_path, oldStr, newStr, "", "", { context: 1e6 });
     const ret: string[] = [];
@@ -254,7 +254,7 @@ or <!-- assert-codeblock diff-partial 1-1.py 1-2.py 13 14 -->, in which the old 
         body: {
           command_type: "DiffPartial",
           result_type: "Success",
-          message: ` OK: "${textbook_filepath}" のコードブロック "${command_args.join(" ")}" を "${old_sample_file_path}" の ${old_starting_line_num + 1} 行目からに適用すると "${new_sample_file_path}" の ${starting_line_num + 1} 行目からと一致しています`,
+          message: ` OK: "${textbook_filepath}:${matched_label_line_num}" のコードブロック "${command_args.join(" ")}" を "${old_sample_file_path}" の ${old_starting_line_num + 1} 行目からに適用すると "${new_sample_file_path}" の ${starting_line_num + 1} 行目からと一致しています`,
           textbook_filepath: textbook_filepath,
           codeblock_line_num: matched_label_line_num,
         }
@@ -266,7 +266,7 @@ or <!-- assert-codeblock diff-partial 1-1.py 1-2.py 13 14 -->, in which the old 
           command_type: "DiffPartial",
           result_type: "Mismatch",
           message: ` MISMATCH FOUND
-in ${textbook_filepath}
+in ${textbook_filepath}:${matched_label_line_num}
 with the code block labeled "${command_args.join(" ")}"
 **************************************
 DEBUG MESSAGE
@@ -280,7 +280,7 @@ ${expected_newStr_lines.join("\n")}\`\`\`
 The full diff of ${old_sample_file_path} with ${new_sample_file_path} is as follows: \`\`\`\n${entire_diff}\`\`\`
 The content in the textbook, intended to be the partial diff, is as follows: \n\`\`\`\n${expected_diff}\`\`\` `,
           message_except_content: ` MISMATCH FOUND
-in ${textbook_filepath}
+in ${textbook_filepath}:${matched_label_line_num}
 with the code block labeled "${command_args.join(" ")}"
 **************************************
 DEBUG MESSAGE
@@ -308,13 +308,13 @@ ${expected_newStr_lines.join("\n")}\`\`\`
           result_type: "Mismatch",
           message: `  CANNOT APPLY THE PATCH
 [original message: \`${e.message}\`]
-in ${textbook_filepath}
+in ${textbook_filepath}:${matched_label_line_num}
 with the code block labeled "${command_args.join(" ")}"
 The full total diff of ${old_sample_file_path} with ${new_sample_file_path} is as follows: \n\`\`\`\n${entire_diff}\`\`\`
 The content in the textbook, intended to be the partial diff, is as follows: \n\`\`\`\n${expected_diff}\`\`\` `,
           message_except_content: `  CANNOT APPLY THE PATCH
 [original message: \`${e.message}\`]
-in ${textbook_filepath}
+in ${textbook_filepath}:${matched_label_line_num}
 with the code block labeled "${command_args.join(" ")}"`,
           textbook_filepath: textbook_filepath,
           codeblock_line_num: matched_label_line_num,
@@ -347,7 +347,7 @@ export function run_command_and_get_result(textbook_filepath: string, command: s
         body: {
           command_type: "Undefined",
           result_type: "UnknownCommand",
-          message: ` assert-codeblock は ${JSON.stringify(command)} というコマンドをサポートしていません`,
+          message: ` ${textbook_filepath}:${matched_line_num}: assert-codeblock は ${JSON.stringify(command)} というコマンドをサポートしていません`,
           textbook_filepath: textbook_filepath,
           codeblock_line_num: matched_line_num,
           codeblock_label: command,

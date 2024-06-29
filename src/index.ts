@@ -74,7 +74,7 @@ export function inspect_codeblock_and_return_message(textbook_filepath: string, 
         body: {
           command_type: "Partial",
           result_type: "LineNumMismatch",
-          message: `MISMATCH FOUND: コマンド "partial ${remaining_args}" には行番号が ${expected_topnum} から始まると書いてありますが、直前の topnum= には行番号が ${actual_topnum} から始まると書いてあります`,
+          message: ` MISMATCH FOUND in ${textbook_filepath}:${line_num}: コマンド "partial ${remaining_args}" には行番号が ${expected_topnum} から始まると書いてありますが、直前の topnum= には行番号が ${actual_topnum} から始まると書いてあります`,
           textbook_filepath: textbook_filepath,
           codeblock_line_num: line_num,
           codeblock_label: "partial " + remaining_args,
