@@ -153,7 +153,27 @@ for example, <!-- assert-codeblock partial 1-1.py 4 --> `,
       }
     }
   }
+
   const starting_line_num = Number(command_args[2]);
+
+  if (Number.isNaN(starting_line_num)) {
+    return {
+      is_success: false,
+      body: {
+        command_type: "Partial",
+        result_type: "LineNumNotNumber",
+        message: ` LINE NUMBER IS NOT A NUMBER
+in ${textbook_filepath}:${matched_label_line_num}
+with the code block labeled "${command_args.join(" ")}"
+The line number "${command_args[2]}" is not a number`,
+        textbook_filepath: textbook_filepath,
+        codeblock_line_num: matched_label_line_num,
+        codeblock_label: command_args.join(" "),
+      }
+    }
+  }
+
+
   const sample_file_name = command_args[1];
   const sample_file_path = path.join(src_folder , sample_file_name);
   const sample_file_content = readFileSync(sample_file_path, command_args.join(" "), matched_label_line_num).replace(/\r?\n/g, "\n");
@@ -222,6 +242,40 @@ or <!-- assert-codeblock diff-partial 1-1.py 1-2.py 13 14 -->, in which the old 
   }
   const starting_line_num = Number(command_args[3]) - 1;
   const old_starting_line_num = command_args[4] === undefined ? starting_line_num : Number(command_args[4]) - 1;
+
+  if (Number.isNaN(starting_line_num) || Number.isNaN(old_starting_line_num)) {
+    let mes = "";
+    const is_starting_line_num_not_number = Number.isNaN(starting_line_num);
+    const is_old_starting_line_num_not_number = Number.isNaN(old_starting_line_num);
+
+    if (command_args[4] === undefined) {
+      // topnum が 1 つの場合
+      mes = `The line number "${command_args[3]}" is not a number`;
+    } else {
+      // topnum が 2 つの場合
+      if (is_starting_line_num_not_number && is_old_starting_line_num_not_number) {
+        mes = `The line numbers "${command_args[3]}" and "${command_args[4]}" are not numbers`;
+      } else if (is_starting_line_num_not_number) {
+        mes = `The new topnum "${command_args[3]}" is not a number`;
+      } else {
+        mes = `The old topnum "${command_args[4]}" is not a number`;
+      }
+    }
+    return {
+      is_success: false,
+      body: {
+        command_type: "Partial",
+        result_type: "LineNumNotNumber",
+        message: ` LINE NUMBER IS NOT A NUMBER
+in ${textbook_filepath}:${matched_label_line_num}
+with the code block labeled "${command_args.join(" ")}"
+${mes}`,
+        textbook_filepath: textbook_filepath,
+        codeblock_line_num: matched_label_line_num,
+        codeblock_label: command_args.join(" "),
+      }
+    }
+  }
 
   const old_sample_file_path = path.join(src_folder , old_sample_file_name);
   const new_sample_file_path = path.join(src_folder , new_sample_file_name);
