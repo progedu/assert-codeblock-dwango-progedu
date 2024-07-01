@@ -47,10 +47,11 @@ export function inspect_codeblock_and_return_message(textbook_filepath: string, 
   }
   const textbook_content = fs.readFileSync(textbook_filepath, { encoding: "utf-8" }).replace(/\r?\n/g, "\n");
 
+  // 改行の位置を特定
+  const lf_arr = [...textbook_content.matchAll(/\n/g)].map((x) => x.index);
+
   /* partial に書いてある先頭行番号が 直前の topnum= に書いてある行番号と異なっていたら怒る */
   const whether_consistent_with_topnum = [...textbook_content.matchAll(/topnum\s*=\s*(?<topnum>"\d+"|'\d+'|\d+)[^>]*>[\n\s]*<!--\s*assert[-_]codeblock\s+partial\s+(?<remaining_args>.*?)-->/gm)];
-
-  const lf_arr = [...textbook_content.matchAll(/\n/g)].map((x) => x.index);
 
   // 怒りを蓄えるための配列
   const inconsistent_topnum_msg: TestRes[] = whether_consistent_with_topnum.flatMap(a => {
