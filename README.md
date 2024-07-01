@@ -273,7 +273,7 @@ for x in range(6):
 
 ### assert-codeblock upd-partial
 
-| 構文 |  `assert-codeblock partial 旧ファイル 新ファイル 行番号` |
+| 構文 |  `assert-codeblock upd-partial 旧ファイル 新ファイル 行番号` |
 |--|--|
 | 役割 | 教材に引用されているコードを、旧ファイルの n 行目から適用して、新ファイルを書き出す。<br> github-action 実行時は、partial 新ファイル 行番号として起動する|
 
