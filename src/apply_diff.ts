@@ -36,6 +36,10 @@ export function apply_diff_on_lines(old_str_lines: string[], diff_lines: string[
       i++;
       j++;
     } else if (diff_lines[i][0] === " ") { // keep as is
+      // check that the line kept as is is correct
+      if (diff_lines[i].slice(1) !== old_str_lines[j].trimEnd()) {
+        throw new PatchApplyError(`The diff patch (in line ${i + 1}) expects the line \`${diff_lines[i].slice(1)}\` to be kept as is, but the actual line (on line ${j + 1}) is \`${old_str_lines[j]}\``)
+      }
       ans_lines.push(old_str_lines[j]);
       i++;
       j++;
