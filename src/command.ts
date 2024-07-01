@@ -156,7 +156,7 @@ for example, <!-- assert-codeblock partial 1-1.py 4 --> `,
   }
   const starting_line_num = Number(command_args[2]);
   const sample_file_name = command_args[1];
-  const sample_file_path = path.join(src_folder , sample_file_name);
+  const sample_file_path = path.join(src_folder, sample_file_name);
   const sample_file_content = readFileSync(sample_file_path, command_args.join(" ")).replace(/\r?\n/g, "\n");
 
   // 末尾の改行を削って行数を数える
@@ -224,8 +224,8 @@ or <!-- assert-codeblock diff-partial 1-1.py 1-2.py 13 14 -->, in which the old 
   const starting_line_num = Number(command_args[3]) - 1;
   const old_starting_line_num = command_args[4] === undefined ? starting_line_num : Number(command_args[4]) - 1;
 
-  const old_sample_file_path = path.join(src_folder , old_sample_file_name);
-  const new_sample_file_path = path.join(src_folder , new_sample_file_name);
+  const old_sample_file_path = path.join(src_folder, old_sample_file_name);
+  const new_sample_file_path = path.join(src_folder, new_sample_file_name);
   const code_block_label = command_args.join(" ");
   const oldStr = readFileSync(old_sample_file_path, code_block_label);
   const newStr = readFileSync(new_sample_file_path, code_block_label);
@@ -331,7 +331,7 @@ with the code block labeled "${command_args.join(" ")}"`,
 function handle_upd_exact(textbook_filepath: string, command_args: string[], expected_new_content: string, src_folder: string, matched_label_index: number): TestRes {
   const code_block_label = command_args.join(" ");
   const new_sample_file_name = command_args[1];
-  const new_sample_file_path = src_folder + new_sample_file_name;
+  const new_sample_file_path = path.join(src_folder, new_sample_file_name);
   if (!fs.existsSync(new_sample_file_path)) {
     fs.writeFileSync(new_sample_file_path, expected_new_content)
     return {
@@ -383,8 +383,8 @@ function handle_upd_diff(textbook_filepath: string, command_args: string[], diff
   const code_block_label = command_args.join(" ");
   const old_sample_file_name = command_args[1];
   const new_sample_file_name = command_args[2];
-  const old_sample_file_path = src_folder + old_sample_file_name;
-  const new_sample_file_path = src_folder + new_sample_file_name;
+  const old_sample_file_path = path.join(src_folder, old_sample_file_name);
+  const new_sample_file_path = path.join(src_folder, new_sample_file_name);
   const old_content = readFileSync(old_sample_file_path, code_block_label).replace(/\r?\n/g, "\n");
   const old_diff_content = diff_content.split("\n").filter((line) => !(line[0] === "+")).map((line) => line.slice(1)).join("\n");
 
@@ -524,8 +524,8 @@ for example, <!-- assert-codeblock partial 1-1.py 1-2.py 4 --> `,
   }
   const starting_line_num = Number(command_args[3]);
 
-  const old_sample_file_path = src_folder + old_sample_file_name;
-  const new_sample_file_path = src_folder + new_sample_file_name;
+  const old_sample_file_path = path.join(src_folder, old_sample_file_name);
+  const new_sample_file_path = path.join(src_folder, new_sample_file_name);
 
   let lineCounter = 0;
   const old_content = readFileSync(old_sample_file_path, code_block_label.replace(/\r?\n/g, "\n"));
@@ -630,8 +630,8 @@ for example, <!-- assert-codeblock upd-diff-partial 1-1.py 1-2.py 13 -->, in whi
   }
   const starting_line_num = Number(command_args[3]) - 1;
 
-  const old_sample_file_path = src_folder + old_sample_file_name;
-  const new_sample_file_path = src_folder + new_sample_file_name;
+  const old_sample_file_path = path.join(src_folder, old_sample_file_name);
+  const new_sample_file_path = path.join(src_folder, new_sample_file_name);
 
   const old_diff_str = diff_content.split("\n").filter((line) => !(line[0] === "+")).map((line, i) => (line.slice(1))).join("\n");
   const old_diff_str_line_count = old_diff_str.split("\n").length - 1;
