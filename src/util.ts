@@ -14,8 +14,29 @@ Cannot find a file "${file_name}" mentioned in the code block labeled "${code_bl
   return fs.readFileSync(file_name, { encoding: "utf-8" });
 }
 
-export type CommandType = "Exact" | "Diff" | "Partial" | "DiffPartial" | "Undefined";
-export type ResultType = "Success" | "Mismatch" | "TextbookNotFound" | "WrongFileNameInCommand" | "LineNumMismatch" | "LineNumMissing" | "UnknownCommand" | "UnknownError";
+export type CommandType =
+  | "Exact"
+  | "Diff"
+  | "Partial"
+  | "DiffPartial"
+  | "UpdExact"
+  | "UpdDiff"
+  | "UpdPartial"
+  | "UpdDiffPartial"
+  | "Undefined";
+
+export type ResultType =
+  | "Success"
+  | "CreatedFile"
+  | "UpdatedFile"
+  | "Mismatch"
+  | "TextbookNotFound"
+  | "WrongFileNameInCommand"
+  | "LineNumMismatch"
+  | "LineNumDuplication"
+  | "LineNumMissing"
+  | "UnknownCommand"
+  | "UnknownError";
 
 export type ResBody = {
   command_type: CommandType,
