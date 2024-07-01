@@ -527,7 +527,6 @@ for example, <!-- assert-codeblock partial 1-1.py 1-2.py 4 --> `,
   const old_sample_file_path = path.join(src_folder, old_sample_file_name);
   const new_sample_file_path = path.join(src_folder, new_sample_file_name);
 
-  let lineCounter = 0;
   const old_content = readFileSync(old_sample_file_path, code_block_label.replace(/\r?\n/g, "\n"));
 
   // 末尾のブランクを削って行数を数える
