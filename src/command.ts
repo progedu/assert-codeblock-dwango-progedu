@@ -402,7 +402,7 @@ function handle_upd_exact(textbook_filepath: string, command_args: string[], exp
     };
   }
 
-  const new_content = readFileSync(new_sample_file_path, code_block_label).replace(/\r?\n/g, "\n");
+  const new_content = readFileSync(new_sample_file_path, code_block_label, matched_line_num).replace(/\r?\n/g, "\n");
   if (expected_new_content !== new_content) {
     fs.writeFileSync(new_sample_file_path, expected_new_content)
     return {
@@ -439,7 +439,7 @@ function handle_upd_diff(textbook_filepath: string, command_args: string[], diff
   const new_sample_file_name = command_args[2];
   const old_sample_file_path = path.join(src_folder, old_sample_file_name);
   const new_sample_file_path = path.join(src_folder, new_sample_file_name);
-  const old_content = readFileSync(old_sample_file_path, code_block_label).replace(/\r?\n/g, "\n");
+  const old_content = readFileSync(old_sample_file_path, code_block_label, matched_line_num).replace(/\r?\n/g, "\n");
   const old_diff_content = diff_content.split("\n").filter((line) => !(line[0] === "+")).map((line) => line.slice(1)).join("\n");
 
   const actual_diff = (() => {
@@ -498,7 +498,7 @@ with the code block labeled "${code_block_label}"`,
     }
 
     // コンテンツに差がある場合は、置き換え
-    const new_content = readFileSync(new_sample_file_path, code_block_label).replace(/\r?\n/g, "\n");
+    const new_content = readFileSync(new_sample_file_path, code_block_label, matched_line_num).replace(/\r?\n/g, "\n");
     if (expected_new_content !== new_content) {
       fs.writeFileSync(new_sample_file_path, expected_new_content)
       return {
@@ -581,7 +581,7 @@ for example, <!-- assert-codeblock partial 1-1.py 1-2.py 4 --> `,
   const old_sample_file_path = path.join(src_folder, old_sample_file_name);
   const new_sample_file_path = path.join(src_folder, new_sample_file_name);
 
-  const old_content = readFileSync(old_sample_file_path, code_block_label.replace(/\r?\n/g, "\n"));
+  const old_content = readFileSync(old_sample_file_path, code_block_label.replace(/\r?\n/g, "\n"), matched_line_num);
 
   // 末尾のブランクを削って行数を数える
   const old_content_trimend = old_content.trimEnd();
@@ -627,7 +627,7 @@ The content of ${old_sample_file_path} already has a line whose number is ${star
   }
 
   // コンテンツに差がある場合は、置き換え
-  const newContent = readFileSync(new_sample_file_path, code_block_label).replace(/\r?\n/g, "\n");
+  const newContent = readFileSync(new_sample_file_path, code_block_label, matched_line_num).replace(/\r?\n/g, "\n");
   if (expected_new_content !== newContent) {
     fs.writeFileSync(new_sample_file_path, expected_new_content)
     return {
@@ -689,7 +689,7 @@ for example, <!-- assert-codeblock upd-diff-partial 1-1.py 1-2.py 13 -->, in whi
   const old_diff_str = diff_content.split("\n").filter((line) => !(line[0] === "+")).map((line, i) => (line.slice(1))).join("\n");
   const old_diff_str_line_count = old_diff_str.split("\n").length - 1;
 
-  const old_content = readFileSync(old_sample_file_path, code_block_label).replace(/\r?\n/g, "\n");
+  const old_content = readFileSync(old_sample_file_path, code_block_label, matched_line_num).replace(/\r?\n/g, "\n");
   const old_str_front = old_content.split("\n").filter((line, i) => (i < starting_line_num)).map((line, i) => (line + "\n")).join("");
   const old_str = old_content.split("\n").filter((line, i) => (i >= starting_line_num) && (i < starting_line_num + old_diff_str_line_count)).map((line, i) => (line + "\n")).join("");
   const old_str_behind = old_content.split("\n").filter((line, i) => (i >= starting_line_num + old_diff_str_line_count)).join("\n");
@@ -748,7 +748,7 @@ The diff of ${old_sample_file_path} with textbook is as follows: \n\`\`\`\n${ent
     }
 
     // コンテンツに差がある場合は、置き換え
-    const new_content = readFileSync(new_sample_file_path, code_block_label).replace(/\r?\n/g, "\n");
+    const new_content = readFileSync(new_sample_file_path, code_block_label, matched_line_num).replace(/\r?\n/g, "\n");
     if (expected_new_content !== new_content) {
       fs.writeFileSync(new_sample_file_path, expected_new_content)
       return {
@@ -819,29 +819,29 @@ export function run_command_and_get_result(textbook_filepath: string, command: s
       return handle_diff_partial(textbook_filepath, command_args, matched_file_content, config.src, matched_line_num);
     } else if (command_args[0] === "upd-exact") {
       if (process.env.GITHUB_ACTIONS) {
-        return handle_exact(textbook_filepath, command_args, matched_file_content, config.src, index);
+        return handle_exact(textbook_filepath, command_args, matched_file_content, config.src, matched_line_num);
       } else {
-        return handle_upd_exact(textbook_filepath, command_args, matched_file_content, config.src, index);
+        return handle_upd_exact(textbook_filepath, command_args, matched_file_content, config.src, matched_line_num);
       }
     } else if (command_args[0] === "upd-diff") {
       if (process.env.GITHUB_ACTIONS) {
-        return handle_diff(textbook_filepath, command_args, matched_file_content, config.src, index);
+        return handle_diff(textbook_filepath, command_args, matched_file_content, config.src, matched_line_num);
       } else {
-        return handle_upd_diff(textbook_filepath, command_args, matched_file_content, config.src, index);
+        return handle_upd_diff(textbook_filepath, command_args, matched_file_content, config.src, matched_line_num);
       }
     } else if (command_args[0] === "upd-partial") {
 
       if (process.env.GITHUB_ACTIONS) {
         command_args.splice(1, 1);
-        return handle_partial(textbook_filepath, command_args, matched_file_content, config.src, index);
+        return handle_partial(textbook_filepath, command_args, matched_file_content, config.src, matched_line_num);
       } else {
-        return handle_upd_partial(textbook_filepath, command_args, matched_file_content, config.src, index);
+        return handle_upd_partial(textbook_filepath, command_args, matched_file_content, config.src, matched_line_num);
       }
     } else if (command_args[0] === "upd-diff-partial") {
       if (process.env.GITHUB_ACTIONS) {
-        return handle_diff_partial(textbook_filepath, command_args, matched_file_content, config.src, index);
+        return handle_diff_partial(textbook_filepath, command_args, matched_file_content, config.src, matched_line_num);
       } else {
-        return handle_upd_diff_partial(textbook_filepath, command_args, matched_file_content, config.src, index);
+        return handle_upd_diff_partial(textbook_filepath, command_args, matched_file_content, config.src, matched_line_num);
       }
     } else {
       return {
