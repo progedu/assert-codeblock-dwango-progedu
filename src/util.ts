@@ -6,10 +6,10 @@ export class WrongFileNameInCommandError extends Error {
   }
 }
 
-export function readFileSync(file_name: string, code_block_label: string): string {
+export function readFileSync(file_name: string, code_block_label: string, line_num:number): string {
   if (!fs.existsSync(file_name)) {
     throw new WrongFileNameInCommandError(` FILE NOT FOUND 
-Cannot find a file "${file_name}" mentioned in the code block labeled "${code_block_label}" `);
+Cannot find a file "${file_name}" mentioned in the code block labeled "${code_block_label}" at line:${line_num}`);
   }
   return fs.readFileSync(file_name, { encoding: "utf-8" });
 }
@@ -35,6 +35,7 @@ export type ResultType =
   | "LineNumMismatch"
   | "LineNumDuplication"
   | "LineNumMissing"
+  | "LineNumNotNumber"
   | "UnknownCommand"
   | "UnknownError";
 
@@ -43,7 +44,7 @@ export type ResBody = {
   result_type: ResultType,
   message: string,
   textbook_filepath: string,
-  codeblock_matched_index: number,
+  codeblock_line_num: number,
   message_except_content?:string,
   codeblock_label?: string,
   textbook_content?: string,
