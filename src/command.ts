@@ -382,7 +382,7 @@ with the code block labeled "${command_args.join(" ")}"`,
   }
 }
 
-function handle_upd_exact(textbook_filepath: string, command_args: string[], expected_new_content: string, src_folder: string, matched_label_index: number): TestRes {
+function handle_upd_exact(textbook_filepath: string, command_args: string[], expected_new_content: string, src_folder: string, matched_line_num: number): TestRes {
   const code_block_label = command_args.join(" ");
   const new_sample_file_name = command_args[1];
   const new_sample_file_path = path.join(src_folder, new_sample_file_name);
@@ -394,9 +394,9 @@ function handle_upd_exact(textbook_filepath: string, command_args: string[], exp
         command_type: "UpdExact",
         result_type: "CreatedFile",
         message:
-        ` OK: "${textbook_filepath}:${matched_label_index}" のコードブロック "${code_block_label}" の内容で "${new_sample_file_path}" のファイルを作りました`,
+        ` OK: "${textbook_filepath}:${matched_line_num}" のコードブロック "${code_block_label}" の内容で "${new_sample_file_path}" のファイルを作りました`,
         textbook_filepath: textbook_filepath,
-        codeblock_matched_index: matched_label_index,
+        codeblock_line_num: matched_line_num,
         codeblock_label: code_block_label,
       }
     };
@@ -411,9 +411,9 @@ function handle_upd_exact(textbook_filepath: string, command_args: string[], exp
         command_type: "UpdExact",
         result_type: "UpdatedFile",
         message:
-        ` OK: "${textbook_filepath}:${matched_label_index}" のコードブロック "${code_block_label}" と "${new_sample_file_path}" が不一致のため、ファイルを置き換えました`,
+        ` OK: "${textbook_filepath}:${matched_line_num}" のコードブロック "${code_block_label}" と "${new_sample_file_path}" が不一致のため、ファイルを置き換えました`,
         textbook_filepath: textbook_filepath,
-        codeblock_matched_index: matched_label_index,
+        codeblock_line_num: matched_line_num,
         codeblock_label: code_block_label,
       }
     };
@@ -424,16 +424,16 @@ function handle_upd_exact(textbook_filepath: string, command_args: string[], exp
         command_type: "UpdExact",
         result_type: "Success",
         message:
-        ` OK: "${textbook_filepath}:${matched_label_index}" のコードブロック "${code_block_label}" は "${new_sample_file_path}" と一致しています`,
+        ` OK: "${textbook_filepath}:${matched_line_num}" のコードブロック "${code_block_label}" は "${new_sample_file_path}" と一致しています`,
         textbook_filepath: textbook_filepath,
-        codeblock_matched_index: matched_label_index,
+        codeblock_line_num: matched_line_num,
         codeblock_label: code_block_label,
       }
     };
   }
 }
 
-function handle_upd_diff(textbook_filepath: string, command_args: string[], diff_content: string, src_folder: string, matched_label_index: number): TestRes {
+function handle_upd_diff(textbook_filepath: string, command_args: string[], diff_content: string, src_folder: string, matched_line_num: number): TestRes {
   const code_block_label = command_args.join(" ");
   const old_sample_file_name = command_args[1];
   const new_sample_file_name = command_args[2];
@@ -460,14 +460,14 @@ function handle_upd_diff(textbook_filepath: string, command_args: string[], diff
         command_type: "UpdDiff",
         result_type: "Mismatch",
         message: ` MISMATCH FOUND 
-in ${textbook_filepath}:${matched_label_index}
+in ${textbook_filepath}:${matched_line_num}
 with the code block labeled "${code_block_label}"
 The diff of ${old_sample_file_path} with textbook is as follows: \n\`\`\`\n${actual_diff}\n\`\`\` 
 `,
         textbook_filepath: textbook_filepath,
-        codeblock_matched_index: matched_label_index,
+        codeblock_line_num: matched_line_num,
         message_except_content: ` MISMATCH FOUND 
-in ${textbook_filepath}:${matched_label_index}
+in ${textbook_filepath}:${matched_line_num}
 with the code block labeled "${code_block_label}"`,
         codeblock_label: code_block_label,
         textbook_content: diff_content,
@@ -489,9 +489,9 @@ with the code block labeled "${code_block_label}"`,
           command_type: "UpdDiff",
           result_type: "CreatedFile",
           message:
-          ` OK: "${textbook_filepath}:${matched_label_index}" のコードブロック "${code_block_label}" のパッチ適用前は旧ファイルと一致しています。新ファイルがないので、パッチ適用後の内容で新ファイルを作りました`,
+          ` OK: "${textbook_filepath}:${matched_line_num}" のコードブロック "${code_block_label}" のパッチ適用前は旧ファイルと一致しています。新ファイルがないので、パッチ適用後の内容で新ファイルを作りました`,
           textbook_filepath: textbook_filepath,
-          codeblock_matched_index: matched_label_index,
+          codeblock_line_num: matched_line_num,
           codeblock_label: code_block_label,
         }
       };
@@ -507,9 +507,9 @@ with the code block labeled "${code_block_label}"`,
           command_type: "UpdDiff",
           result_type: "UpdatedFile",
           message:
-          ` OK: "${textbook_filepath}:${matched_label_index}" のコードブロック "${code_block_label}" のパッチ適用前は旧ファイルと一致しています。パッチ適用後の内容と新ファイルの内容が不一致のため、新ファイルを置き換えました`,
+          ` OK: "${textbook_filepath}:${matched_line_num}" のコードブロック "${code_block_label}" のパッチ適用前は旧ファイルと一致しています。パッチ適用後の内容と新ファイルの内容が不一致のため、新ファイルを置き換えました`,
           textbook_filepath: textbook_filepath,
-          codeblock_matched_index: matched_label_index,
+          codeblock_line_num: matched_line_num,
           codeblock_label: code_block_label,
         }
       };
@@ -524,7 +524,7 @@ with the code block labeled "${code_block_label}"`,
         message:
         ` OK: "${textbook_filepath}" のコードブロック "${code_block_label}" のパッチ適用前は旧ファイルと、パッチ適用後は新ファイルと一致しています`,
         textbook_filepath: textbook_filepath,
-        codeblock_matched_index: matched_label_index,
+        codeblock_line_num: matched_line_num,
         codeblock_label: code_block_label,
       }
     };
@@ -537,15 +537,15 @@ with the code block labeled "${code_block_label}"`,
           result_type: "Mismatch",
           message: `  CANNOT APPLY THE PATCH
 [original message: \`${e.message}\`]
-in ${textbook_filepath}:${matched_label_index}
+in ${textbook_filepath}:${matched_line_num}
 with the code block labeled "${code_block_label}"
 The content of ${old_sample_file_path} is as follows: \n\`\`\`\n${old_content}\`\`\` 
 The patch in the textbook is as follows: \n\`\`\`\n${diff_content}\`\`\` `,
           textbook_filepath: textbook_filepath,
-          codeblock_matched_index: matched_label_index,
+          codeblock_line_num: matched_line_num,
           message_except_content: `  CANNOT APPLY THE PATCH
 [original message: \`${e.message}\`]
-in ${textbook_filepath}:${matched_label_index}
+in ${textbook_filepath}:${matched_line_num}
 with the code block labeled "${code_block_label}"`,
           codeblock_label: code_block_label,
         }
@@ -554,7 +554,7 @@ with the code block labeled "${code_block_label}"`,
   }
 }
 
-function handle_upd_partial(textbook_filepath: string, command_args: string[], additional_content: string, src_folder: string, matched_label_index: number): TestRes {
+function handle_upd_partial(textbook_filepath: string, command_args: string[], additional_content: string, src_folder: string, matched_line_num: number): TestRes {
   const code_block_label = command_args.join(" ");
   const old_sample_file_name = command_args[1];
   const new_sample_file_name = command_args[2];
@@ -566,12 +566,12 @@ function handle_upd_partial(textbook_filepath: string, command_args: string[], a
         command_type: "UpdPartial",
         result_type: "LineNumMissing",
         message: ` INSUFFICIENT ARGUMENT: LINE NUMBER MISSING
-in ${textbook_filepath}:${matched_label_index}
+in ${textbook_filepath}:${matched_line_num}
 with the code block labeled "${code_block_label}"
 Note that 'assert-codeblock upd-partial' requires two file names AND one's line number:
 for example, <!-- assert-codeblock partial 1-1.py 1-2.py 4 --> `,
         textbook_filepath: textbook_filepath,
-        codeblock_matched_index: matched_label_index,
+        codeblock_line_num: matched_line_num,
         codeblock_label: code_block_label,
       }
     }
@@ -595,11 +595,11 @@ for example, <!-- assert-codeblock partial 1-1.py 1-2.py 4 --> `,
         command_type: "UpdPartial",
         result_type: "LineNumDuplication",
         message: ` MISMATCH FOUND
-in ${textbook_filepath}:${matched_label_index}
+in ${textbook_filepath}:${matched_line_num}
 with the code block labeled "${code_block_label}"
 The content of ${old_sample_file_path} already has a line whose number is ${starting_line_num}`,
         textbook_filepath: textbook_filepath,
-        codeblock_matched_index: matched_label_index,
+        codeblock_line_num: matched_line_num,
         codeblock_label: code_block_label,
         textbook_content: additional_content,
         sample_content: old_content,
@@ -618,9 +618,9 @@ The content of ${old_sample_file_path} already has a line whose number is ${star
         command_type: "UpdPartial",
         result_type: "CreatedFile",
         message:
-        ` OK: "${textbook_filepath}:${matched_label_index}" のコードブロック "${code_block_label}" の内容で "${new_sample_file_path}" のファイルを作りました`,
+        ` OK: "${textbook_filepath}:${matched_line_num}" のコードブロック "${code_block_label}" の内容で "${new_sample_file_path}" のファイルを作りました`,
         textbook_filepath: textbook_filepath,
-        codeblock_matched_index: matched_label_index,
+        codeblock_line_num: matched_line_num,
         codeblock_label: code_block_label,
       }
     };
@@ -636,9 +636,9 @@ The content of ${old_sample_file_path} already has a line whose number is ${star
         command_type: "UpdPartial",
         result_type: "UpdatedFile",
         message:
-        ` OK: "${textbook_filepath}:${matched_label_index}" のコードブロック "${code_block_label}" は "${new_sample_file_path}" と一致しています`,
+        ` OK: "${textbook_filepath}:${matched_line_num}" のコードブロック "${code_block_label}" は "${new_sample_file_path}" と一致しています`,
         textbook_filepath: textbook_filepath,
-        codeblock_matched_index: matched_label_index,
+        codeblock_line_num: matched_line_num,
         codeblock_label: code_block_label,
       }
     };
@@ -651,15 +651,15 @@ The content of ${old_sample_file_path} already has a line whose number is ${star
       command_type: "UpdPartial",
       result_type: "Success",
       message:
-      ` OK: "${textbook_filepath}:${matched_label_index}" のコードブロック "${code_block_label}" は "${new_sample_file_path}" と一致しています`,
+      ` OK: "${textbook_filepath}:${matched_line_num}" のコードブロック "${code_block_label}" は "${new_sample_file_path}" と一致しています`,
       textbook_filepath: textbook_filepath,
-      codeblock_matched_index: matched_label_index,
+      codeblock_line_num: matched_line_num,
       codeblock_label: code_block_label,
     }
   };
 }
 
-function handle_upd_diff_partial(textbook_filepath: string, command_args: string[], diff_content: string, src_folder: string, matched_label_index: number): TestRes {
+function handle_upd_diff_partial(textbook_filepath: string, command_args: string[], diff_content: string, src_folder: string, matched_line_num: number): TestRes {
   const code_block_label = command_args.join(" ");
   const old_sample_file_name = command_args[1];
   const new_sample_file_name = command_args[2];
@@ -671,12 +671,12 @@ function handle_upd_diff_partial(textbook_filepath: string, command_args: string
         command_type: "UpdDiffPartial",
         result_type: "LineNumMissing",
         message: ` INSUFFICIENT ARGUMENT: LINE NUMBER MISSING
-in ${textbook_filepath}:${matched_label_index}
+in ${textbook_filepath}:${matched_line_num}
 with the code block labeled "${code_block_label}"
 Note that 'assert-codeblock upd-diff-partial' requires two file names AND one's line number at which the diff starts: 
 for example, <!-- assert-codeblock upd-diff-partial 1-1.py 1-2.py 13 -->, in which the line numbers start at 13.`,
         textbook_filepath: textbook_filepath,
-        codeblock_matched_index: matched_label_index,
+        codeblock_line_num: matched_line_num,
         codeblock_label: code_block_label,
       }
     }
@@ -712,12 +712,12 @@ for example, <!-- assert-codeblock upd-diff-partial 1-1.py 1-2.py 13 -->, in whi
         command_type: "UpdDiffPartial",
         result_type: "Mismatch",
         message: ` MISMATCH FOUND
-in ${textbook_filepath}:${matched_label_index}
+in ${textbook_filepath}:${matched_line_num}
 with the code block labeled "${code_block_label}"
 The diff of ${old_sample_file_path} with textbook is as follows: \n\`\`\`\n${entire_diff}\n\`\`\`
 `,
         textbook_filepath: textbook_filepath,
-        codeblock_matched_index: matched_label_index,
+        codeblock_line_num: matched_line_num,
         codeblock_label: code_block_label,
         textbook_content: diff_content,
         sample_content: entire_diff,
@@ -739,9 +739,9 @@ The diff of ${old_sample_file_path} with textbook is as follows: \n\`\`\`\n${ent
           command_type: "UpdDiffPartial",
           result_type: "CreatedFile",
           message:
-          ` OK: "${textbook_filepath}:${matched_label_index}" のコードブロック "${code_block_label}" のパッチ適用前の部分は旧ファイルの部分と一致しています。新ファイルがないので、パッチ適用後の内容で新ファイルを作りました`,
+          ` OK: "${textbook_filepath}:${matched_line_num}" のコードブロック "${code_block_label}" のパッチ適用前の部分は旧ファイルの部分と一致しています。新ファイルがないので、パッチ適用後の内容で新ファイルを作りました`,
           textbook_filepath: textbook_filepath,
-          codeblock_matched_index: matched_label_index,
+          codeblock_line_num: matched_line_num,
           codeblock_label: code_block_label,
         }
       };
@@ -757,9 +757,9 @@ The diff of ${old_sample_file_path} with textbook is as follows: \n\`\`\`\n${ent
           command_type: "UpdDiffPartial",
           result_type: "UpdatedFile",
           message:
-          ` OK: "${textbook_filepath}:${matched_label_index}" のコードブロック "${code_block_label}" のパッチ適用前の部分は旧ファイルの部分と一致しています。パッチ適用後の内容と新ファイルの内容が不一致のため、新ファイルを置き換えました`,
+          ` OK: "${textbook_filepath}:${matched_line_num}" のコードブロック "${code_block_label}" のパッチ適用前の部分は旧ファイルの部分と一致しています。パッチ適用後の内容と新ファイルの内容が不一致のため、新ファイルを置き換えました`,
           textbook_filepath: textbook_filepath,
-          codeblock_matched_index: matched_label_index,
+          codeblock_line_num: matched_line_num,
           codeblock_label: code_block_label,
         }
       };
@@ -774,7 +774,7 @@ The diff of ${old_sample_file_path} with textbook is as follows: \n\`\`\`\n${ent
         message:
         ` OK: "${textbook_filepath}" のコードブロック "${code_block_label}" のパッチ適用前の部分は旧ファイルの部分と、パッチ適用後の内容は新ファイルの内容と一致しています`,
         textbook_filepath: textbook_filepath,
-        codeblock_matched_index: matched_label_index,
+        codeblock_line_num: matched_line_num,
         codeblock_label: code_block_label,
       }
     };
@@ -787,15 +787,15 @@ The diff of ${old_sample_file_path} with textbook is as follows: \n\`\`\`\n${ent
           result_type: "Mismatch",
           message: `  CANNOT APPLY THE PATCH
 [original message: \`${e.message}\`]
-in ${textbook_filepath}:${matched_label_index}
+in ${textbook_filepath}:${matched_line_num}
 with the code block labeled "${code_block_label}"
 The partial content of ${old_sample_file_path} is as follows: \n\`\`\`\n${old_str}\`\`\`
 The partial patch in the textbook is as follows: \n\`\`\`\n${diff_content}\`\`\` `,
           textbook_filepath: textbook_filepath,
-          codeblock_matched_index: matched_label_index,
+          codeblock_line_num: matched_line_num,
           message_except_content: `  CANNOT APPLY THE PATCH
 [original message: \`${e.message}\`]
-in ${textbook_filepath}:${matched_label_index}
+in ${textbook_filepath}:${matched_line_num}
 with the code block labeled "${code_block_label}"`,
           codeblock_label: code_block_label,
           textbook_content: diff_content,
