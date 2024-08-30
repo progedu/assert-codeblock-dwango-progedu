@@ -224,6 +224,125 @@ AssertCodeblock.run_all_tests_and_exit([
 
 一括でテストしてほしいが戻り値が bool で欲しい場合は、代わりに `AssertCodeblock.run_all_tests` を呼ぶこと。
 
+### CI 向けの機能
+
+CI 向けに assert-codeblock の実行結果を改変して表示させたい場合があるかと思う。
+
+その場合は `inspect_codeblock_and_return_message` 関数の戻り値から得られる結果を利用すると良い。
+
+以下に簡単な例として、チェックが失敗した結果について失敗した原因とコードブロックの行数を表示する例を示す。
+
+```js
+const { globSync } = require('glob');
+const AssertCodeblock = require('assert-codeblock-dwango-progedu');
+
+const config = {
+  src: "./_assert_codeblock_test_cases/",
+}
+
+const textbook_filepath_arr = globSync('TEXTBOOK*/**.md');
+
+for(const filepath of textbook_filepath_arr) {
+  // 指定した教材に対して、assert-codeblockを実行しチェックが失敗した箇所を取得
+  const res_arr = AssertCodeblock.inspect_codeblock_and_return_message(filepath,config).filter(res => res.is_success === false);
+
+  for(const res of res_arr) {
+    // 取得した結果の中身を取り出して表示
+    const body = res.body;
+    console.warn(`${body.textbook_filepath}:${body.codeblock_line_num}: ${body.result_type} `)
+  }
+}
+```
+
+この結果、例として以下のような出力が得られる。
+
+```bash
+ assert-codeblock: TEXTBOOK/TEXTBOOK.md をチェック中
+TEXTBOOK/TEXTBOOK.md:334: Mismatch
+TEXTBOOK/TEXTBOOK.md:458: Mismatch
+TEXTBOOK/TEXTBOOK.md:1063: Mismatch
+TEXTBOOK/TEXTBOOK.md:1477: Mismatch
+```
+
+<details>
+<summary>戻り値の中身について確認したい場合はここを参照すること</summary>
+
+`inspect_codeblock_and_return_message` は `TestRes` 型で定義されたオブジェクトを返す。
+
+```ts
+type TestRes = {
+  is_success: Boolean,
+  body: ResBody,
+  additionally?: unknown
+};
+```
+
+`is_success` はテストが成功したかどうかを表す。
+
+`additionally` はコードブロックの内容が載っている場合があるが、`body` からでも同様の内容が取得できるためこちらをわざわざ使わなくても大丈夫。`additionally` 将来的に `body` に統合するかもしれない。
+
+`body` はチェック結果の詳細な情報を保ち、`ResBody` 型で定義されたオブジェクトを返す。
+
+```ts
+type ResBody = {
+  command_type: CommandType,
+  result_type: ResultType,
+  message: string,
+  textbook_filepath: string,
+  codeblock_line_num: number,
+  message_except_content?:string,
+  codeblock_label?: string,
+  textbook_content?: string,
+  sample_content?: string,
+  textbook_topnum?: string,
+  sample_topnum?: string,
+}
+```
+
+詳細な説明は以下の通り。
+
+| プロパティ | 説明 |
+| --- | --- |
+| command_type | そのコードブロックで指定されているコマンドのタイプ。e.g `exact`, `diff-partial` ...etc <br> コマンドの指定が意図されないものである場合、`undefined` が返される。 |
+| result_type | チェックした結果を取得でき、主にどのようなエラーが吐かれたかを取得するのに使われることを想定している。e.g `Mismatch`,`LineNumMismatch`,`UnknownCommand` |
+| message | ローカルで実行する場合に表示する用のメッセージです。CI 用途ではあまり出番はなさそうです。 |
+| textbook_filepath | コードブロックが存在する教材のファイルパスです。 |
+| codeblock_line_num | チェックしているコードブロックが存在する行数です。 |
+| message_except_content | メッセージからコードブロックの内容を省いたものです。簡易的にエラー内容を表示させる場合に使えると思います。 |
+| codeblock_label | assert-codeblock のラベルです。どのようなラベルに対してチェックをしたのかわかります。 |
+| textbook_content | 教材側のコードブロックの内容です |
+| sample_content | サンプルファイル側の内容です。この結果を利用すると textbook_content と合わせて何かできるかもしれません。 |
+| textbook_topnum | 教材側のコードブロックで指定した行数です。 |
+| sample_topnum | サンプルファイルに対する行数指定を取得します。 |
+
+#### command_type について
+
+コマンドのタイプは先に述べた使い方のところで言及したものと同様です。追加で意図されないコマンドが指定された場合に返される `Undefined` があります。
+
+- Exact
+- Diff
+- Partial
+- DiffPartial
+- Undefined
+
+#### result_type について
+
+結果のタイプは主にエラーの種類を示すものです。以下にその一覧を示します。
+
+| 種類 | 内容 |
+| --- | --- |
+| Success | チェックが成功 |
+| Mismatch | コードブロックの内容が一致しない |
+| TextbookNotFound | 指定されたパスに教材が存在しない |
+| WrongFileNameInCommand | 指定したサンプルファイル名が間違っている |
+| LineNumMismatch | 指定された行数において記述が食い違っている |
+| LineNumMissing | 行数指定が存在しない |
+| LineNumNotNumber | 行数指定が数値ではない |
+| UnknownCommand | 意図されないコマンドが入力された場合に返される |
+| UnknownError | 上記の結果以外がこれで返される |
+
+</details>
+
 ## リネーム機能
 
 こうする。
