@@ -244,7 +244,7 @@ const textbook_filepath_arr = globSync('TEXTBOOK*/**.md');
 
 for(const filepath of textbook_filepath_arr) {
   // 指定した教材に対して、assert-codeblockを実行しチェックが失敗した箇所を取得
-  const res_arr = AssertCodeblock.inspect_codeblock_and_return_message(filepath,config).filter(res => res.is_success === false);
+  const res_arr = AssertCodeblock.inspect_codeblock_and_return_message(filepath, config).filter(res => res.is_success === false);
 
   for(const res of res_arr) {
     // 取得した結果の中身を取り出して表示
