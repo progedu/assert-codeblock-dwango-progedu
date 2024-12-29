@@ -175,7 +175,7 @@ def fizz_buzz():
 教材 `textbook-004.md` には
 
 ````markdown
-<!-- assert-codeblock diff 1-4.py 1-5.py 7 6 -->
+<!-- assert-codeblock diff-partial 1-4.py 1-5.py 7 6 -->
 
 ```diff-python
  def fizz_buzz():
